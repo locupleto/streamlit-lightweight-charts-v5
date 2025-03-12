@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, Literal
+from typing import Dict, Any, Literal
 
 @dataclass
 class ChartTheme:
