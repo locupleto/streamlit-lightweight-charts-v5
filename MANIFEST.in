@@ -1,0 +1,2 @@
+recursive-include lightweight_charts_multipane/frontend/build *
+recursive-exclude lightweight_charts_multipane/frontend/node_modules *
