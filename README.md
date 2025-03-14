@@ -15,6 +15,8 @@ Key features:
 - Yield curve visualization
 - Screenshot functionality
 
+![Screenshot](Screenshot.png)
+
 ## Installation
 
 ```bash
