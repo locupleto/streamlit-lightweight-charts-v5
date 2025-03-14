@@ -104,8 +104,6 @@ def main():
             # Create all overlay indicators to later add to the main PriceIndicator
             sma_20 = SMAIndicator(df, period=20, color="rgba(255, 140, 0, 0.8)")  # Orange
             sma_200 = SMAIndicator(df, period=200, color="rgba(25, 118, 210, 0.8)") # Blue
-            avwap = AVWAPIndicator(df, left_strength=10, right_strength=10, realistic_mode=False)
-            pivot_high = PivotHighIndicator(df, left_strength=20, right_strength=5, realistic_mode=False)
 
             # Create markers for significant points, e.g. Buy/Sell from a strategy
             buy_index = -30
@@ -135,7 +133,7 @@ def main():
                 PriceIndicator(df, height=500, 
                             title=title,
                             style=chart_style, 
-                            overlays=[pivot_high, avwap, sma_200], 
+                            overlays=[sma_20, sma_200], 
                             markers=markers,
                             theme=theme),
                 VolumeIndicator(df, height=120, theme=theme),

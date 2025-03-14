@@ -4,7 +4,7 @@ A Streamlit component that integrates TradingView's Lightweight Charts v5 librar
 
 ## Overview
 
-Streamlit Lightweight Charts v5 is built around version 5 of the TradingView Lightweight Charts library, which introduces powerful multi-pane capabilities perfect for technical analysis. This component allows you to create professional-grade financial charts with multiple indicators stacked vertically, similar to popular trading platforms.
+Streamlit Lightweight Charts v5 is built around version 5 of the TradingView Lightweight Charts library, which introduces powerful multi-pane capabilities perfect for technical analysis. This component allows you to create great looking financial charts with multiple indicators stacked vertically, similar to popular trading platforms.
 
 Key features:
 
@@ -62,17 +62,17 @@ lightweight_charts_v5_component(
 
 ## Demo Application
 
-The repository includes a `demo/` directory with example scripts that showcase how to use the component. These scripts include:
+The repository includes a `demo/` directory with two example scripts that showcase how to use the component. These scripts include:
 
 - `minimal_demo.py`: A minimal example using Yahoo Finance stock data
-- `chart_demo.py`: Stock chart visualization with multiple indicators
-- `chart_themes.py`: Theme customization (Light, Dark, Black, Custom)
-- `indicators.py`: Different price chart styles (Candlestick, Bar, Line) and technical indicators
-- `yield_curve.py`: Yield curve visualization
+- `chart_demo.py`: A slightly more advanced example with multiple indicators
+- `chart_themes.py`: Theme customization examples for the chart_demo module.
+- `indicators.py`: A couple of example indicators for the chart_demo module.
+- `yield_curve.py`: Yield curve visualization for the chart_demo module.
 
 ## Running the Demo Applications 
 
-To test the demo scripts, run one of the example scripts using **Streamlit**:
+To test the two demo scripts, run them using **Streamlit**:
 
 ```bash
 streamlit run demo/minimal_demo.py  # Minimal example
