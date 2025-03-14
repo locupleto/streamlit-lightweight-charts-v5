@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Literal, Optional
 import pandas as pd
 import numpy as np
-from lightweight_charts_v5.chart_themes import ChartTheme, ChartThemes
+from chart_themes import ChartTheme, ChartThemes
 
 # Base stand-alone Indicator class (has its own pane)
 class Indicator(ABC):

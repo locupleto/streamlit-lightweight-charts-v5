@@ -3,9 +3,9 @@ from pathlib import Path
 from lightweight_charts_v5 import lightweight_charts_v5_component
 import numpy as np
 import yfinance as yf
-from lightweight_charts_v5.chart_themes import ChartThemes
-from lightweight_charts_v5.indicators import *
-from lightweight_charts_v5.yield_curve import get_yield_curve_config
+from chart_themes import ChartThemes
+from indicators import *
+from yield_curve import get_yield_curve_config
 
 # Default symbol for the chart
 DEFAULT_SYMBOL = "^GSPC"  # S&P 500 index

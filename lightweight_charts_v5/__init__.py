@@ -6,6 +6,7 @@ from typing import List
 import streamlit.components.v1 as components
 
 COMPONENT_NAME = "lightweight_charts_v5_component"
+__version__ = "0.1.1"
 _RELEASE = True  # Keep this False for development flexibility
 
 # Function to check if dev server is running
@@ -58,7 +59,7 @@ def lightweight_charts_v5_component(name, data=None,
     zoom_level: int
         Number of bars to show in the initial view (default: 200).
     fonts: List[str]
-        Optional List of extra google fonts to download for use in charts.
+        List of optional google fonts that will be downloaded for use.
     key: str or None
         Optional key.
 
