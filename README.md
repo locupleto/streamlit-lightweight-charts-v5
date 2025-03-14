@@ -21,6 +21,7 @@ Key features:
 python3 -m venv venv
 source venv/bin/activate
 pip install git+https://github.com/locupleto/streamlit-lightweight-charts-v5.git --force-reinstall
+pip install streamlit yfinance numpy
 ```
 
 ## Quick Start
@@ -28,31 +29,34 @@ pip install git+https://github.com/locupleto/streamlit-lightweight-charts-v5.git
 ```python
 import streamlit as st
 from lightweight_charts_v5 import lightweight_charts_v5_component
+import yfinance as yf
 
-# Create a simple chart
-result = lightweight_charts_v5_component(
-    name="My Chart",
+# Load stock data
+ticker = "AAPL"
+data = yf.download(ticker, period="100d", interval="1d", auto_adjust=False) 
+
+# Convert data to Lightweight Charts format, ensuring values are proper floats
+chart_data = [
+    {"time": str(date.date()), "value": float(row["Close"].iloc[0])}  
+    for date, row in data.iterrows()
+]
+
+# Streamlit app
+st.title(f"{ticker} Stock Price Chart")
+
+# Render the chart
+lightweight_charts_v5_component(
+    name=f"{ticker} Chart",
     charts=[{
         "chart": {"layout": {"background": {"color": "#FFFFFF"}}},
         "series": [{
             "type": "Line",
-            "data": [
-                { time: '2019-04-11', value: 80.01 },
-                { time: '2019-04-12', value: 96.63 },
-                { time: '2019-04-13', value: 76.64 },
-                { time: '2019-04-14', value: 81.89 },
-                { time: '2019-04-15', value: 74.43 },
-                { time: '2019-04-16', value: 80.01 },
-                { time: '2019-04-17', value: 96.63 },
-                { time: '2019-04-18', value: 76.64 },
-                { time: '2019-04-19', value: 81.89 },
-                { time: '2019-04-20', value: 74.43 },
-            ],
+            "data": chart_data,
             "options": {"color": "#2962FF"}
         }],
-        "height": 300
+        "height": 400
     }],
-    height=300
+    height=400
 )
 ```
 
@@ -60,26 +64,19 @@ result = lightweight_charts_v5_component(
 
 The repository includes a `demo/` directory with example scripts that showcase how to use the component. These scripts include:
 
+- `minimal_demo.py`: A minimal example using Yahoo Finance stock data
 - `chart_demo.py`: Stock chart visualization with multiple indicators
 - `chart_themes.py`: Theme customization (Light, Dark, Black, Custom)
 - `indicators.py`: Different price chart styles (Candlestick, Bar, Line) and technical indicators
 - `yield_curve.py`: Yield curve visualization
 
-## Running the Demo Application
+## Running the Demo Applications 
 
-To test the demo scripts, first install the package and required dependencies:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install git+https://github.com/locupleto/streamlit-lightweight-charts-v5.git --force-reinstall
-pip install streamlit yfinance numpy
-```
-
-Then, run the example script using **Streamlit**:
+To test the demo scripts, run one of the example scripts using **Streamlit**:
 
 ```bash
-streamlit run demo/chart_demo.py
+streamlit run demo/minimal_demo.py  # Minimal example
+streamlit run demo/chart_demo.py    # Full demo with indicators
 ```
 
 ## License
