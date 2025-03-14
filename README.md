@@ -69,8 +69,8 @@ The repository includes a `demo/` directory with two example scripts that showca
 - `minimal_demo.py`: A minimal example using Yahoo Finance stock data
 - `chart_demo.py`: A slightly more advanced example with multiple indicators
 - `chart_themes.py`: Theme customization examples for the chart_demo module.
-- `indicators.py`: A couple of example indicators for the chart_demo module.
-- `yield_curve.py`: Yield curve visualization for the chart_demo module.
+- `indicators.py`: Example indicators for the chart_demo module.
+- `yield_curve.py`: Yield curve example chart for the chart_demo module.
 
 ## Running the Demo Applications 
 
