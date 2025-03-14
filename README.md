@@ -62,9 +62,9 @@ lightweight_charts_v5_component(
 )
 ```
 
-## Demo Application
+## Demos
 
-The repository includes a `demo/` directory with two example scripts that showcase how to use the component. These scripts include:
+The repository includes a `demo/` directory with two example scripts that showcase how to use the component.
 
 - `minimal_demo.py`: A minimal example using Yahoo Finance stock data
 - `chart_demo.py`: A slightly more advanced example with multiple indicators
