@@ -10,8 +10,8 @@ Key features:
 
 - Multi-pane chart layouts for price and indicators
 - Customizable themes and styles
-- Add your own standalone technical indicators (RSI, MACD, Williams %R etc.)
-- Or overlay indicators (Moving Averages, AVWAP, Pivot Points...)
+- Add your own favourite standalone technical indicators (RSI, MACD, Williams %R etc.)
+- Use overlay indicators (Moving Averages, AVWAP, Pivot Points...)
 - Yield curve charts
 - Supports Screenshots
 
