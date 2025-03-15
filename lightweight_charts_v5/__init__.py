@@ -6,7 +6,7 @@ from typing import List
 import streamlit.components.v1 as components
 
 COMPONENT_NAME = "lightweight_charts_v5_component"
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 _RELEASE = True  # Keep this False for development flexibility
 
 # Function to check if dev server is running
