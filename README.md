@@ -15,15 +15,15 @@ Key features:
 - Yield curve charts
 - Supports Screenshots
 
-![Screenshot](Screenshot.png)
+![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot.png)
 
 ## Installation
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install git+https://github.com/locupleto/streamlit-lightweight-charts-v5.git --force-reinstall
-pip install streamlit yfinance numpy
+pip install streamlit-lightweight-charts-v5
+pip install streamlit yfinance numpy  # for running demos
 ```
 
 ## Quick Start
@@ -44,7 +44,7 @@ chart_data = [
 ]
 
 # Streamlit app
-st.title(f"{ticker} Stock Price Chart")
+st.title(f"{ticker} Stock Price Line Chart")
 
 # Render the chart
 lightweight_charts_v5_component(
@@ -71,6 +71,8 @@ The repository includes a `demo/` directory with two example scripts that showca
 - `chart_themes.py`: Theme customization examples for the chart_demo module.
 - `indicators.py`: Example indicators for the chart_demo module.
 - `yield_curve.py`: Yield curve example chart for the chart_demo module.
+
+You can find the demo files in the [GitHub repository](https://github.com/locupleto/streamlit-lightweight-charts-v5/tree/main/demo).
 
 ## Running the Demo Applications 
 
