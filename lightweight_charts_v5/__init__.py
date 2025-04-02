@@ -2,11 +2,11 @@
 
 import os
 import socket
-from typing import List
+from typing import List, Dict, Any, Optional, Union
 import streamlit.components.v1 as components
 
 COMPONENT_NAME = "lightweight_charts_v5_component"
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 _RELEASE = True  # Keep this False for development flexibility
 
 # Function to check if dev server is running
@@ -52,6 +52,19 @@ def lightweight_charts_v5_component(name, data=None,
         Data for a single pane chart (if not using multiple panes).
     charts: list of dict
         A list of pane configuration dictionaries (for multiple panes).
+
+        Each series in a chart can include rectangles with the following format:
+        {
+            "startTime": "2023-01-01",  # Time for the starting point
+            "startPrice": 100.0,        # Price for the starting point
+            "endTime": "2023-01-15",    # Time for the ending point
+            "endPrice": 120.0,          # Price for the ending point
+            "fillColor": "rgba(255, 0, 0, 0.2)",  # Fill color with opacity
+            "borderColor": "rgba(255, 0, 0, 1)",  # Optional border color
+            "borderWidth": 1,           # Optional border width
+            "opacity": 0.5              # Optional opacity (overrides the one in fillColor)
+        }
+
     height: int
         Overall chart height (if using single pane or as a fallback).
     take_screenshot: bool

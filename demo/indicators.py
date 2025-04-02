@@ -113,11 +113,13 @@ class PriceIndicator(Indicator):
                  style: Literal["Candlestick", "Bar", "Line"] = "Candlestick",
                  overlays: Optional[List[Any]] = None, 
                  markers: Optional[List[Dict[str, Any]]] = None,
+                 rectangles: Optional[List[Dict[str, Any]]] = None,  # Add rectangles parameter
                  theme: Optional[ChartTheme] = None):
         super().__init__(df, height, theme)
         self.style = style
         self.overlays = overlays or []
         self.markers = markers or []
+        self.rectangles = rectangles or []  # Initialize rectangles list
         self.title = title or "<Add your own chart title>"
 
     def calculate(self) -> None:
@@ -194,9 +196,13 @@ class PriceIndicator(Indicator):
                 # Handle indicators that return a single series (backward compatibility)
                 series_configs.append(overlay.get_series_config())
 
-        # Add markers last if present (so they end up on-top)
+        # Add markers if present
         if self.markers:
             series_configs[0]["markers"] = self.markers
+
+        # Add rectangles if present
+        if self.rectangles:
+            series_configs[0]["rectangles"] = self.rectangles
 
         # Get base chart config from theme
         chart_config = self.get_chart_config()
@@ -206,7 +212,13 @@ class PriceIndicator(Indicator):
             "series": series_configs,
             "height": self.height,
             "title": display_title
-        }
+        } 
+
+    def calculate(self) -> None:
+        # Calculate any overlay indicators
+        for overlay in self.overlays:
+            overlay.calculate()
+
 class VolumeIndicator(Indicator):
     def calculate(self) -> None:
         pass

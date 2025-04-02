@@ -128,13 +128,32 @@ def main():
                 },
             ]
 
-            # Create indicators with explicit heights
+            # Create rectangles to highlight specific regions
+            start_offset = -150
+            end_offset = -100
+            rectangles = [
+                {
+                    # Rectangle highlighting the range between 200 and 150 bars back
+                    "startTime": df['date'].iloc[start_offset],
+                    "startPrice": df['low'].iloc[start_offset:end_offset].min(),  # Lowest low in the range
+                    "endTime": df['date'].iloc[end_offset],
+                    "endPrice": df['high'].iloc[start_offset:end_offset].max(),  # Highest high in the range
+                    "fillColor": "rgba(255, 255, 0, 0.5)",  # Yellow with 50% opacity
+                    "borderColor": "rgba(255, 255, 0, 0.0)",  # Same color as fill
+                    "borderWidth": 0,  # No border
+                    "opacity": 0.5,
+                    "zOrder": "bottom"  # Place it behind other elements
+                }
+            ]
+ 
+            # Then modify the PriceIndicator creation to include the rectangles
             indicators = [
                 PriceIndicator(df, height=500, 
                             title=title,
                             style=chart_style, 
                             overlays=[sma_20, sma_200], 
                             markers=markers,
+                            rectangles=rectangles,  # Add the rectangles here
                             theme=theme),
                 VolumeIndicator(df, height=120, theme=theme),
                 RSIIndicator(df, height=120, theme=theme),

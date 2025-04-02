@@ -53,6 +53,11 @@ import {
   IChartApi,
 } from "lightweight-charts"
 
+import {
+  StaticRectangle,
+  RectangleOptions,
+} from "./plugins/StaticRectanglePlugin"
+
 /**
  * Defines the configuration for a single marker within a series.
  * Markers can be used to e.g. show Buy and Sell points in a chart
@@ -84,6 +89,7 @@ interface SeriesConfig {
   }
   markers?: SeriesMarker[]
   label?: string // Series label (especially useful for overlays)
+  rectangles?: RectangleData[] // Add this line for rectangles
 }
 
 /**
@@ -132,6 +138,18 @@ interface ChartConfig {
   series: SeriesConfig[] // Array of series (including overlays) to display in this pane
   height: number // Desired height of the pane in pixels
   title?: string // title property for pane watermark display
+}
+
+interface RectangleData {
+  startTime: string
+  startPrice: number
+  endTime: string
+  endPrice: number
+  fillColor: string
+  borderColor?: string
+  borderWidth?: number
+  opacity?: number
+  zOrder?: "top" | "bottom" // Add z-order parameter
 }
 
 function LightweightChartsComponent({
@@ -241,6 +259,18 @@ function LightweightChartsComponent({
       borderVisible: true,
     })
 
+    // After chart creation, ensure time scale is properly configured
+    chart.timeScale().applyOptions({
+      rightOffset: 12,
+      barSpacing: 6,
+      fixLeftEdge: true,
+      lockVisibleTimeRangeOnResize: true,
+      rightBarStaysOnScroll: true,
+      borderColor: chartConfig.timeScaleBorderColor || "#2B2B43",
+      borderVisible: true,
+      timeVisible: true,
+    })
+
     // Store chart instance in ref
     chartRef.current = chart
 
@@ -308,6 +338,54 @@ function LightweightChartsComponent({
       })
     })
 
+    /**
+     * Fourth Phase: Add rectangles to series that have them
+     */
+    const rectangleInstances: StaticRectangle[] = []
+    charts.forEach((paneConfig: ChartConfig, paneIndex: number) => {
+      paneConfig.series.forEach((s: SeriesConfig, seriesIndex: number) => {
+        if (
+          s.rectangles &&
+          s.rectangles.length > 0 &&
+          seriesInstances[paneIndex][seriesIndex]
+        ) {
+          s.rectangles.forEach((rect: RectangleData) => {
+            // Create the rectangle with proper coordinates
+            const rectangle = new StaticRectangle(
+              chart,
+              seriesInstances[paneIndex][seriesIndex],
+              {
+                startTime: rect.startTime,
+                startPrice: rect.startPrice,
+                endTime: rect.endTime,
+                endPrice: rect.endPrice,
+                fillColor: rect.fillColor,
+                borderColor: rect.borderColor || "#000000",
+                borderWidth: rect.borderWidth || 2,
+                opacity: rect.opacity || 0.7,
+                zOrder: rect.zOrder || "bottom", // Add z-order parameter with default
+              }
+            )
+            rectangleInstances.push(rectangle)
+          })
+        }
+      })
+    })
+
+    // Add this after creating all rectangles
+    chart.subscribeClick(() => {
+      // Force update of all rectangles on chart interaction
+      rectangleInstances.forEach((rectangle) => {
+        rectangle.setOptions({}) // This triggers an update without changing options
+      })
+    })
+
+    // Also update rectangles on visible range change
+    chart.timeScale().subscribeVisibleTimeRangeChange(() => {
+      rectangleInstances.forEach((rectangle) => {
+        rectangle.setOptions({})
+      })
+    })
     /**
      * CRITICAL SECTION: Pane Height Initialization
      *
