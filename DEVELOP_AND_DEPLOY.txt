@@ -1,0 +1,32 @@
+Notes on development-loop for this project
+==========================================
+
+- Keep two shells available in VSCode
+    a) Python Debug Console for the Python Streamlit test project
+    b) zsh for running the development server and re-building ts-code
+
+Typescript development iteration (zsh)
+--------------------------------------
+- project_root: /Volumes/Work/development/projects/git/streamlit-lightweight-charts-v5/
+- cd {project_root}/lightweight_charts_v5/frontend
+- use restart.sh to re-build all ts-code and restart the server 
+  (basically: npm run build && sleep 3 && npm start)
+
+Python-side streamlit demo_chart.py
+-----------------------------------
+- cd {project_root}
+- stop streamlit debugger if running
+- pip install -e .
+- Cmd-Shift D to run streamlit again in the debugger
+
+Tag and check in
+----------------
+- git tag -n
+- update __version__ in BOTH front_end/__init__,py AND setup.py 
+- git_push_version.sh <new version> "Comment for new version"
+
+Deploy to PyPi
+--------------
+- python setup.py sdist bdist_wheel
+- (pip install twine)
+- twine upload dist/*  (paste token from Documents/Licenses/PyPI-Token.txt)
