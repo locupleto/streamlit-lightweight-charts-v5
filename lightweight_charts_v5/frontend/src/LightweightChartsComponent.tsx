@@ -372,22 +372,6 @@ function LightweightChartsComponent({
       })
     })
     /**
-    // Add this after creating all rectangles
-    chart.subscribeClick(() => {
-      // Force update of all rectangles on chart interaction
-      rectangleInstances.forEach((rectangle) => {
-        rectangle.setOptions({}) // This triggers an update without changing options
-      })
-    })
-
-    // Also update rectangles on visible range change
-    chart.timeScale().subscribeVisibleTimeRangeChange(() => {
-      rectangleInstances.forEach((rectangle) => {
-        rectangle.setOptions({})
-      })
-    })
-    */
-    /**
      * CRITICAL SECTION: Pane Height Initialization
      *
      * This async function is key to achieving correct pane heights.
