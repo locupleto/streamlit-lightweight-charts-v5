@@ -22,7 +22,10 @@ Python-side streamlit demo_chart.py
 Tag and check in
 ----------------
 - git tag -n
-- update __version__ in BOTH front_end/__init__,py AND setup.py 
+- update __version__ in 
+ - front_end/__init__,py 
+ - front_end/setup.py 
+ - front_end/package.json
 - git_push_version.sh <new version> "Comment for new version"
 
 Deploy to PyPi

@@ -156,7 +156,13 @@ function LightweightChartsComponent({
   args,
   theme,
 }: ComponentProps): React.ReactElement {
-  const { charts, take_screenshot, zoom_level = 200, fonts = [] } = args
+  const {
+    charts,
+    take_screenshot,
+    zoom_level = 200,
+    fonts = [],
+    configureTimeScale = false,
+  } = args
   const chartContainerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<IChartApi | null>(null)
   const [hasSetInitialValue, setHasSetInitialValue] = useState(false)
@@ -259,19 +265,17 @@ function LightweightChartsComponent({
       borderVisible: true,
     })
 
-    /**
-    // After chart creation, ensure time scale is properly configured
-    chart.timeScale().applyOptions({
-      rightOffset: 12,
-      barSpacing: 6,
-      fixLeftEdge: true,
-      lockVisibleTimeRangeOnResize: true,
-      rightBarStaysOnScroll: true,
-      borderColor: chartConfig.timeScaleBorderColor || "#2B2B43",
-      borderVisible: true,
-      timeVisible: true,
-    })
-    */
+    // Apply additional time scale configuration only if configureTimeScale is true
+    if (configureTimeScale) {
+      chart.timeScale().applyOptions({
+        rightOffset: 12,
+        barSpacing: 6,
+        fixLeftEdge: true,
+        lockVisibleTimeRangeOnResize: true,
+        rightBarStaysOnScroll: true,
+        timeVisible: true,
+      })
+    }
 
     // Store chart instance in ref
     chartRef.current = chart

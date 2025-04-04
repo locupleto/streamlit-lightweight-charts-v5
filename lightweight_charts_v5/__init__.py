@@ -7,7 +7,7 @@ import streamlit.components.v1 as components
 
 COMPONENT_NAME = "lightweight_charts_v5_component"
 __version__ = "0.1.4"
-_RELEASE = True  # Keep this False for development flexibility
+_RELEASE = False  # Keep this False for development flexibility
 
 # Function to check if dev server is running
 def _is_dev_server_running():
@@ -40,6 +40,7 @@ def lightweight_charts_v5_component(name, data=None,
                                     take_screenshot: bool = False, 
                                     zoom_level: int = 200, 
                                     fonts: List[str] = None,
+                                    configure_time_scale: bool = False,
                                     key=None):
     """
     Create a new instance of the component.
@@ -73,6 +74,10 @@ def lightweight_charts_v5_component(name, data=None,
         Number of bars to show in the initial view (default: 200).
     fonts: List[str]
         List of optional google fonts that will be downloaded for use.
+    configure_time_scale: bool
+        If True, applies additional time scale configuration that helps with 
+        multi-chart layouts with really small charts but may cause issues with 
+        screenshot functionality. Default is False.
     key: str or None
         Optional key.
 
