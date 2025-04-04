@@ -10,7 +10,7 @@ setuptools.setup(
     version="0.1.4",
     author="Urban Ottosson",
     author_email="urban@ottosson.org",
-    description="Streamlit component that allows you to view v5 Lightweight Charts",
+    description="Streamlit component for viewing v5 Lightweight Charts",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/locupleto/streamlit-lightweight-charts-v5", 
