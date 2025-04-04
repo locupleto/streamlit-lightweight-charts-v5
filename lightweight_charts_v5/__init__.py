@@ -101,6 +101,7 @@ def lightweight_charts_v5_component(name, data=None,
             zoom_level=zoom_level,
             fonts=fonts, 
             key=key,
+            configure_time_scale=configure_time_scale,
             default=default_value
         )
     else:
@@ -111,5 +112,6 @@ def lightweight_charts_v5_component(name, data=None,
             take_screenshot=take_screenshot,
             zoom_level=zoom_level,
             key=key,
+            configure_time_scale=configure_time_scale,
             default=default_value
         )
