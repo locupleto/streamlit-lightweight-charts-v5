@@ -371,7 +371,7 @@ function LightweightChartsComponent({
         }
       })
     })
-
+    /**
     // Add this after creating all rectangles
     chart.subscribeClick(() => {
       // Force update of all rectangles on chart interaction
@@ -386,6 +386,7 @@ function LightweightChartsComponent({
         rectangle.setOptions({})
       })
     })
+    */
     /**
      * CRITICAL SECTION: Pane Height Initialization
      *

@@ -13,7 +13,7 @@ Typescript development iteration (zsh)
   (basically: npm run build && sleep 3 && npm start)
 
 Python-side streamlit demo_chart.py
------------------------------------
+----------------------------------- 
 - cd {project_root}
 - stop streamlit debugger if running
 - pip install -e .
