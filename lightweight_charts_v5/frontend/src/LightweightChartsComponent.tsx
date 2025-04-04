@@ -577,6 +577,7 @@ function LightweightChartsComponent({
     take_screenshot,
     zoom_level,
     fontsLoaded,
+    configureTimeScale,
   ])
 
   // Separate effect for screenshot handling stays unchanged
