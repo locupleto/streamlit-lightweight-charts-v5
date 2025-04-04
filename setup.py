@@ -14,7 +14,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/locupleto/streamlit-lightweight-charts-v5", 
-    packages=setuptools.find_packages(exclude=["demo"]),
+    packages=["lightweight_charts_v5"],
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
