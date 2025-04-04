@@ -254,23 +254,6 @@ function LightweightChartsComponent({
       textColor: chartConfig.priceScaleTextColor,
     })
 
-    chart.timeScale().applyOptions({
-      borderColor: chartConfig.timeScaleBorderColor || "#2B2B43",
-      borderVisible: true,
-    })
-
-    // After chart creation, ensure time scale is properly configured
-    chart.timeScale().applyOptions({
-      rightOffset: 12,
-      barSpacing: 6,
-      fixLeftEdge: true,
-      lockVisibleTimeRangeOnResize: true,
-      rightBarStaysOnScroll: true,
-      borderColor: chartConfig.timeScaleBorderColor || "#2B2B43",
-      borderVisible: true,
-      timeVisible: true,
-    })
-
     // Store chart instance in ref
     chartRef.current = chart
 
