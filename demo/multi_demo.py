@@ -88,7 +88,7 @@ def display_chart(symbol_info, period, theme, selected_theme_name):
             name=symbol_info["symbol"],
             charts=[chart_config],
             height=chart_config["height"],
-            zoom_level=50,
+            zoom_level=250,
             take_screenshot=False,
             configure_time_scale=False,
             fonts=HANDWRITTEN_FONTS if selected_theme_name == "Custom" else None,
