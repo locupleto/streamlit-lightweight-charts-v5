@@ -1,6 +1,8 @@
 from typing import List, Dict, Any
 
 def get_sample_yield_curves() -> List[Dict[str, Any]]:
+    import pandas as pd
+    
     """Returns sample yield curve data"""
     curve1 = [
         {"time": 1, "value": 5.378},

@@ -110,7 +110,7 @@ class PriceIndicator(Indicator):
     """
     def __init__(self, df: pd.DataFrame, height: int = None, 
                  title: Optional[str] = None,
-                 style: Literal["Candlestick", "Bar", "Line"] = "Candlestick",
+                 style: Literal["Candlestick", "Bar", "Line", "Area"] = "Candlestick",
                  overlays: Optional[List[Any]] = None, 
                  markers: Optional[List[Dict[str, Any]]] = None,
                  rectangles: Optional[List[Dict[str, Any]]] = None,  # Add rectangles parameter
@@ -136,17 +136,12 @@ class PriceIndicator(Indicator):
         if isinstance(price_data['time'].iloc[0], (pd.Timestamp, np.datetime64)):
             price_data['time'] = price_data['time'].dt.strftime('%Y-%m-%d')
         else:
-            # If it's already a string, ensure it's in the correct format
             price_data['time'] = pd.to_datetime(price_data['time']).dt.strftime('%Y-%m-%d')
 
-        price_records = price_data.to_dict(orient="records")
-
-        # Calculate percentage change from previous day's close
-        # Handle potential NaN or empty values
+        # Calculate percentage change
         try:
-            # Fix: Use .iloc[0] for proper float conversion
-            last_close = self.df['close'].iloc[-1].item()
-            prev_close = self.df['close'].iloc[-2].item()
+            last_close = self.df['close'].iloc[-1]
+            prev_close = self.df['close'].iloc[-2]
             pct_change = ((last_close - prev_close) / prev_close) * 100
             pct_change_str = f" ({'+' if pct_change >= 0 else ''}{pct_change:.2f}%)"
         except (IndexError, ValueError, ZeroDivisionError, AttributeError):
@@ -155,8 +150,34 @@ class PriceIndicator(Indicator):
         # Append percentage change to title
         display_title = f"{self.title}{pct_change_str}"
 
+        # Determine if using dark theme
+        is_dark_theme = "dark" in str(self.theme).lower() or "black" in str(self.theme).lower()
+
         # Configure series based on style
-        if self.style == "Candlestick":
+        if self.style == "Area":
+            colors = self._get_performance_colors(is_dark_theme)
+            area_data = self.df[['date', 'close']].copy()
+            area_data.rename(columns={'date': 'time', 'close': 'value'}, inplace=True)
+            area_data['time'] = area_data['time'].astype(str)
+            area_records = area_data.to_dict(orient="records")
+            series_config = {
+                "type": "Area",
+                "data": area_records,
+                "options": {
+                    "lineColor": colors["line"],
+                    "topColor": colors["top"],
+                    "bottomColor": colors["bottom"],
+                    "lineWidth": 2,
+                    "priceFormat": {
+                        "type": 'price',
+                        "precision": 2,
+                        "minMove": 0.01,
+                    },
+                    "priceLineVisible": False
+                }
+            }
+        elif self.style == "Candlestick":
+            price_records = price_data.to_dict(orient="records")
             series_config = {
                 "type": "Candlestick",
                 "data": price_records,
@@ -230,6 +251,41 @@ class PriceIndicator(Indicator):
         # Calculate any overlay indicators
         for overlay in self.overlays:
             overlay.calculate()
+            
+    def _get_performance_colors(self, is_dark_theme: bool) -> Dict[str, str]:
+        """Determine colors based on performance and theme"""
+        # Calculate performance
+        first_close = self.df['close'].iloc[0]
+        last_close = self.df['close'].iloc[-1]
+        performance = ((last_close / first_close) - 1) * 100
+        is_bullish = performance >= 0
+
+        if is_bullish:
+            if is_dark_theme:
+                return {
+                    "line": "rgba(76, 175, 80, 1)",  # Green
+                    "top": "rgba(76, 175, 80, 0.4)",
+                    "bottom": "rgba(76, 175, 80, 0.1)"
+                }
+            else:
+                return {
+                    "line": "rgba(0, 128, 0, 1)",  # Darker Green
+                    "top": "rgba(0, 128, 0, 0.4)",
+                    "bottom": "rgba(0, 128, 0, 0.1)"
+                }
+        else:
+            if is_dark_theme:
+                return {
+                    "line": "rgba(255, 82, 82, 1)",  # Red
+                    "top": "rgba(255, 82, 82, 0.4)",
+                    "bottom": "rgba(255, 82, 82, 0.1)"
+                }
+            else:
+                return {
+                    "line": "rgba(178, 34, 34, 1)",  # Darker Red
+                    "top": "rgba(178, 34, 34, 0.4)",
+                    "bottom": "rgba(178, 34, 34, 0.1)"
+                }
 
 class VolumeIndicator(Indicator):
     def calculate(self) -> None:

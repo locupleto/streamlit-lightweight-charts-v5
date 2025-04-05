@@ -68,12 +68,12 @@ def display_chart(symbol_info, period, theme, selected_theme_name):
         # Create title
         title = f"{symbol_info['symbol']} - {symbol_info['name']}"
 
-        # Create indicator exactly like chart_demo
+        # Create indicator with Area style instead of Line
         indicator = PriceIndicator(
             df=df,
             height=250,
             title=title,
-            style="Line",
+            style="Area",  # Changed from "Line" to "Area"
             theme=theme
         )
 
