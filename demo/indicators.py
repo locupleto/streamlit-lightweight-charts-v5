@@ -131,14 +131,26 @@ class PriceIndicator(Indicator):
         # Prepare main price series data
         price_data = self.df[['date', 'open', 'high', 'low', 'close']].copy()
         price_data.rename(columns={'date': 'time'}, inplace=True)
-        price_data['time'] = price_data['time'].astype(str)
+
+        # Ensure dates are properly formatted strings
+        if isinstance(price_data['time'].iloc[0], (pd.Timestamp, np.datetime64)):
+            price_data['time'] = price_data['time'].dt.strftime('%Y-%m-%d')
+        else:
+            # If it's already a string, ensure it's in the correct format
+            price_data['time'] = pd.to_datetime(price_data['time']).dt.strftime('%Y-%m-%d')
+
         price_records = price_data.to_dict(orient="records")
 
         # Calculate percentage change from previous day's close
-        last_close = self.df['close'].iloc[-1]
-        prev_close = self.df['close'].iloc[-2]
-        pct_change = ((last_close - prev_close) / prev_close) * 100
-        pct_change_str = f" ({'+' if pct_change >= 0 else ''}{pct_change:.2f}%)"
+        # Handle potential NaN or empty values
+        try:
+            # Fix: Use .iloc[0] for proper float conversion
+            last_close = self.df['close'].iloc[-1].item()
+            prev_close = self.df['close'].iloc[-2].item()
+            pct_change = ((last_close - prev_close) / prev_close) * 100
+            pct_change_str = f" ({'+' if pct_change >= 0 else ''}{pct_change:.2f}%)"
+        except (IndexError, ValueError, ZeroDivisionError, AttributeError):
+            pct_change_str = ""
 
         # Append percentage change to title
         display_title = f"{self.title}{pct_change_str}"
