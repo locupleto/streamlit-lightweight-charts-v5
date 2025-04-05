@@ -6,6 +6,11 @@ import yfinance as yf
 from chart_themes import ChartThemes
 from indicators import *
 from yield_curve import get_yield_curve_config
+import sys
+import os
+
+# Add the current directory to the path so we can import multi_demo
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Default symbol for the chart
 DEFAULT_SYMBOL = "^GSPC"  # S&P 500 index
@@ -35,16 +40,11 @@ def main():
     with col0:
         demo_type = st.selectbox(
             "Select Demo",
-            options=["StockChart Demo", "Yield Curve Demo"],
+            options=["StockChart Demo", "Yield Curve Demo", "Multi-Chart Demo"],
             index=0
         )
 
     with col1:
-        # Add symbol input for yfinance
-        if demo_type == "StockChart Demo":
-            symbol = st.text_input("Symbol", value=DEFAULT_SYMBOL)
-
-    with col2:
         theme_options = {
             "Light": ChartThemes.light(),
             "Dark": ChartThemes.dark(),
@@ -58,19 +58,28 @@ def main():
         )
         theme = theme_options[selected_theme]
 
-    with col3:
-        chart_style = st.selectbox(
-            "Select Price Chart Style",
-            options=["Candlestick", "Bar", "Line"],
-            index=0,
-            key="chart_style_selector"
-        )
+    with col2:
+        # Add symbol input for yfinance
+        if demo_type == "StockChart Demo":
+            symbol = st.text_input("Symbol", value=DEFAULT_SYMBOL)
 
-    # Modify col4 to include both buttons
+    with col3:
+        if demo_type == "StockChart Demo":
+            chart_style = st.selectbox(
+                "Select Price Chart Style",
+                options=["Candlestick", "Bar", "Line"],
+                index=0,
+                key="chart_style_selector"
+            )
+
+    # Only show screenshot button for non-multi-chart demos
     with col4:
-        st.write('')
-        st.write('')
-        take_screenshot = st.button("Save Screenshot", key="screenshot_button")
+        if demo_type != "Multi-Chart Demo":
+            st.write('')
+            st.write('')
+            take_screenshot = st.button("Save Screenshot", key="screenshot_button")
+        else:
+            take_screenshot = False
 
     if demo_type == "StockChart Demo":
         # Fetch data using yfinance
@@ -145,7 +154,7 @@ def main():
                     "zOrder": "bottom"  # Place it behind other elements
                 }
             ]
- 
+
             # Then modify the PriceIndicator creation to include the rectangles
             indicators = [
                 PriceIndicator(df, height=500, 
@@ -171,74 +180,95 @@ def main():
             # Calculate total height
             total_height = sum(indicator.height for indicator in indicators)
 
+            # Display chart the chart
+            result = lightweight_charts_v5_component(
+                name=symbol,
+                charts=charts_config,
+                height=total_height,
+                zoom_level=150,
+                take_screenshot=take_screenshot,
+                fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,
+                key=f"chart_{demo_type}"
+            )
+
+            # Handle screenshot data if such is returned from the component
+            if take_screenshot:
+                handle_screenshot(result)
+
         except Exception as e:
             st.error(f"Error fetching data for {symbol}: {str(e)}")
             return
 
-    else:  # Yield Curve Demo
-        # Hide the chart style selector for yield curve demo
-        col3.empty()
-
+    elif demo_type == "Yield Curve Demo":
         # Get yield curve configuration
         charts_config = [get_yield_curve_config(theme.to_dict())]
         total_height = 400
         symbol = "Yield Curve"
 
-    # Display chart the chart
-    result = lightweight_charts_v5_component(
-        name=symbol if demo_type == "StockChart Demo" else "Yield Curve",
-        charts=charts_config,
-        height=total_height,
-        zoom_level=150 if demo_type == "StockChart Demo" else 200,
-        take_screenshot=take_screenshot,
-        fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,
-        key=f"chart_{demo_type}"
-    )
+        # Display chart
+        result = lightweight_charts_v5_component(
+            name=symbol,
+            charts=charts_config,
+            height=total_height,
+            zoom_level=200,
+            take_screenshot=take_screenshot,
+            fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,  # This is correct
+            key=f"chart_{demo_type}"
+        )
 
-    # Handle screenshot data if such is returned from the component
-    if take_screenshot:
-        if result is None:
-            st.info("Waiting for screenshot data...")
-        elif isinstance(result, dict):
-            if result.get('type') == 'screenshot' and 'data' in result:
-                import base64
-                from io import BytesIO
-                from PIL import Image
-                import os
-                from pathlib import Path
-                from datetime import datetime
+        # Handle screenshot data if such is returned from the component
+        if take_screenshot:
+            handle_screenshot(result)
 
-                try:
-                    # Get the base64 string from the data URL
-                    img_data = result['data'].split(',')[1]
-                    # Convert to bytes
-                    img_bytes = base64.b64decode(img_data)
-                    # Create image from bytes
-                    img = Image.open(BytesIO(img_bytes))
+    elif demo_type == "Multi-Chart Demo":
+        # Import and run the multi_demo module's function with the current theme
+        import multi_demo
+        multi_demo.run_multi_chart_demo(theme, selected_theme)  # selected_theme is the name string
 
-                    # Create a platform-independent path
-                    home_dir = str(Path.home())
-                    desktop_dir = os.path.join(home_dir, "Desktop")
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"chart_screenshot_{timestamp}.png"
+def handle_screenshot(result):
+    """Handle screenshot data returned from the component"""
+    if result is None:
+        st.info("Waiting for screenshot data...")
+    elif isinstance(result, dict):
+        if result.get('type') == 'screenshot' and 'data' in result:
+            import base64
+            from io import BytesIO
+            from PIL import Image
+            import os
+            from pathlib import Path
+            from datetime import datetime
 
-                    # Use desktop if it exists, otherwise use home directory
-                    if os.path.exists(desktop_dir):
-                        save_path = os.path.join(desktop_dir, filename)
-                    else:
-                        save_path = os.path.join(home_dir, filename)
+            try:
+                # Get the base64 string from the data URL
+                img_data = result['data'].split(',')[1]
+                # Convert to bytes
+                img_bytes = base64.b64decode(img_data)
+                # Create image from bytes
+                img = Image.open(BytesIO(img_bytes))
 
-                    # Save to the determined path
-                    img.save(save_path)
-                    st.success(f"Screenshot saved to: {save_path}")
-                except Exception as e:
-                    st.error(f"Error saving screenshot: {str(e)}")
-            else:
-                st.warning("Invalid screenshot data format")
+                # Create a platform-independent path
+                home_dir = str(Path.home())
+                desktop_dir = os.path.join(home_dir, "Desktop")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"chart_screenshot_{timestamp}.png"
+
+                # Use desktop if it exists, otherwise use home directory
+                if os.path.exists(desktop_dir):
+                    save_path = os.path.join(desktop_dir, filename)
+                else:
+                    save_path = os.path.join(home_dir, filename)
+
+                # Save to the determined path
+                img.save(save_path)
+                st.success(f"Screenshot saved to: {save_path}")
+            except Exception as e:
+                st.error(f"Error saving screenshot: {str(e)}")
         else:
-            st.warning(f"Unexpected result type: {type(result)}")
-            if hasattr(result, '__dict__'):
-                st.write("Debug - Result attributes:", result.__dict__)
+            st.warning("Invalid screenshot data format")
+    else:
+        st.warning(f"Unexpected result type: {type(result)}")
+        if hasattr(result, '__dict__'):
+            st.write("Debug - Result attributes:", result.__dict__)
 
 if __name__ == "__main__":
     main()

@@ -37,6 +37,11 @@ def get_yield_curve_config(theme: dict) -> Dict[str, Any]:
     """Creates yield curve chart configuration"""
     curves = get_sample_yield_curves()
 
+    # Extract title font settings from theme correctly
+    title_font_family = theme.get("titleOptions", {}).get("fontFamily", "inherit")
+    title_font_size = theme.get("titleOptions", {}).get("fontSize", 14)
+    title_font_style = theme.get("titleOptions", {}).get("fontStyle", "normal")
+
     return {
         "chart": {
             "layout": theme["layout"],
@@ -51,6 +56,10 @@ def get_yield_curve_config(theme: dict) -> Dict[str, Any]:
             },
             "handleScroll": False,
             "handleScale": False,
+            "fontFamily": "inherit",
+            "titleFontFamily": title_font_family,
+            "titleFontSize": title_font_size,
+            "titleFontStyle": title_font_style,
         },
         "series": [
             {
@@ -75,5 +84,5 @@ def get_yield_curve_config(theme: dict) -> Dict[str, Any]:
             }
         ],
         "height": 400,
-        "title": "Yield Curve Comparison"
+        "title": "Yield Curve Comparison",
     }
