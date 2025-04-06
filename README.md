@@ -17,7 +17,9 @@ Key features:
 - Supports Screenshots
 
 ![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_1.png)
+
 ![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_2.png)
+
 ![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_3.png)
 
 ## Installation
