@@ -12,10 +12,13 @@ Key features:
 - Customizable themes and styles
 - Add your own favourite standalone technical indicators (RSI, MACD, Williams %R etc.)
 - Use overlay indicators (Moving Averages, AVWAP, Pivot Points...)
+- Support for drawing Rectangles for e.g. Support / Resistance areas from code
 - Yield curve charts
 - Supports Screenshots
 
-![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot.png)
+![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_1.png)
+![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_2.png)
+![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_3.png)
 
 ## Installation
 

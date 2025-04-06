@@ -132,6 +132,9 @@ class PriceIndicator(Indicator):
         price_data = self.df[['date', 'open', 'high', 'low', 'close']].copy()
         price_data.rename(columns={'date': 'time'}, inplace=True)
 
+        # First, prepare price_records outside the style conditions
+        price_records = price_data.to_dict(orient="records")
+
         # Ensure dates are properly formatted strings
         if isinstance(price_data['time'].iloc[0], (pd.Timestamp, np.datetime64)):
             price_data['time'] = price_data['time'].dt.strftime('%Y-%m-%d')
@@ -177,7 +180,6 @@ class PriceIndicator(Indicator):
                 }
             }
         elif self.style == "Candlestick":
-            price_records = price_data.to_dict(orient="records")
             series_config = {
                 "type": "Candlestick",
                 "data": price_records,
