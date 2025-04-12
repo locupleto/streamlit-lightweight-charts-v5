@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
     name="streamlit-lightweight-charts-v5",
-    version="0.1.4",
+    version="0.1.5",
     author="Urban Ottosson",
     author_email="urban@ottosson.org",
     description="Streamlit component for viewing v5 Lightweight Charts",

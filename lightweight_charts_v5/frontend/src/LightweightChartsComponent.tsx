@@ -26,7 +26,7 @@
  * 2. Window Resize Race Condition:
  * Aggressive window resizing could trigger "Object is disposed" errors
  * during chart's internal paint cycle. Solution for this involves:
- * - Debouncing resize events with 300ms delay (found optimal through testing)
+ * - Debouncing resize events with 800ms delay
  * - Tracking chart disposal state with refs
  * - Making chart invisible before disposal to prevent paint operations
  * - Disabling user interactions during cleanup
@@ -170,6 +170,11 @@ function LightweightChartsComponent({
   const resizeTimeoutRef = useRef<number | null>(null)
   const isDisposed = useRef(false)
   const [fontsLoaded, setFontsLoaded] = useState(false) // Add state to track font loading
+  const isResizing = useRef(false)
+  const lastResizeTime = useRef(Date.now())
+  const MIN_RESIZE_INTERVAL = 1000 // 1 second minimum between resizes
+  const [chartStable, setChartStable] = useState(false)
+  const stabilityTimeout = useRef<number | null>(null)
 
   // Separate useEffect for font loading
   useEffect(() => {
@@ -392,17 +397,27 @@ function LightweightChartsComponent({
     const initializePaneHeights = async () => {
       const panes = chart.panes()
 
-      // Critical: Process panes from bottom to top
+      // First pass: set all panes to minimum height to avoid conflicts
+      for (let i = 0; i < panes.length; i++) {
+        panes[i].setHeight(30) // Minimum height
+      }
+
+      // Small delay to let the layout settle
+      await new Promise((resolve) => setTimeout(resolve, 50))
+
+      // Second pass: set actual heights from bottom to top
       for (let i = panes.length - 1; i >= 0; i--) {
         const pane = panes[i]
         const targetHeight = charts[i].height
 
-        // Set height and wait for it to settle
-        await new Promise((resolve) => {
-          pane.setHeight(targetHeight)
-          setTimeout(resolve, 10) // Small delay allows layout to stabilize
-        })
+        pane.setHeight(targetHeight)
+
+        // Wait between each height setting
+        await new Promise((resolve) => setTimeout(resolve, 30))
       }
+
+      // Final delay to ensure all changes are applied
+      await new Promise((resolve) => setTimeout(resolve, 50))
     }
 
     // Get all panes after series creation
@@ -455,9 +470,11 @@ function LightweightChartsComponent({
      * Used for window resize events after initial setup
      */
     const setRelativeHeights = () => {
+      if (!chartRef.current) return
+
       const currentTotalHeight =
         chartContainerRef.current?.clientHeight || totalHeight
-      const panes = chart.panes()
+      const panes = chartRef.current.panes()
 
       panes.forEach((pane, index) => {
         if (pane) {
@@ -471,37 +488,138 @@ function LightweightChartsComponent({
 
     // Initialize pane heights and then set up chart view
     initializePaneHeights().then(() => {
+      if (!chartRef.current) return
+
       // Set initial zoom level after heights are established
       const mainSeriesData = charts[0].series[0].data
       if (mainSeriesData?.length >= zoom_level) {
-        chart.timeScale().setVisibleRange({
+        chartRef.current.timeScale().setVisibleRange({
           from: mainSeriesData[mainSeriesData.length - zoom_level].time,
           to: mainSeriesData[mainSeriesData.length - 1].time,
         })
       } else {
-        chart.timeScale().fitContent()
+        chartRef.current.timeScale().fitContent()
       }
+
+      // Mark chart as initialized
+      setChartStable(true)
+
+      // Set a timeout to mark the chart as stable after initial rendering
+      if (stabilityTimeout.current) {
+        window.clearTimeout(stabilityTimeout.current)
+      }
+      stabilityTimeout.current = window.setTimeout(() => {
+        setChartStable(true)
+      }, 2000) // 2 seconds should be enough for initial rendering
     })
 
     // Handle window resize events
     const handleResize = () => {
+      // Skip if already resizing or if not enough time has passed since last resize
+      const now = Date.now()
+      if (
+        isResizing.current ||
+        now - lastResizeTime.current < MIN_RESIZE_INTERVAL ||
+        !chartStable ||
+        !chartRef.current
+      ) {
+        return
+      }
+
       // Clear any existing timeout
       if (resizeTimeoutRef.current) {
         window.clearTimeout(resizeTimeoutRef.current)
       }
 
-      // Set new timeout
+      // Set new timeout with increased debounce
       resizeTimeoutRef.current = window.setTimeout(() => {
-        if (chartContainerRef.current && !isDisposed.current) {
-          const newWidth = chartContainerRef.current.clientWidth
-          chart.resize(newWidth, totalHeight)
-          setRelativeHeights()
+        if (
+          chartContainerRef.current &&
+          !isDisposed.current &&
+          chartRef.current
+        ) {
+          isResizing.current = true
+          lastResizeTime.current = Date.now()
+
+          try {
+            // Temporarily disable user interaction during resize
+            chartRef.current.applyOptions({
+              handleScale: false,
+              handleScroll: false,
+            })
+
+            const newWidth = chartContainerRef.current.clientWidth
+
+            // Store visible range before resize
+            const visibleRange = chartRef.current.timeScale().getVisibleRange()
+
+            // Perform resize with a single operation
+            chartRef.current.resize(newWidth, totalHeight)
+
+            // Wait for resize to complete before adjusting panes
+            setTimeout(() => {
+              try {
+                // Apply heights in a controlled sequence
+                if (chartRef.current) {
+                  const panes = chartRef.current.panes()
+
+                  // Process from bottom to top for stability
+                  for (let i = panes.length - 1; i >= 0; i--) {
+                    if (panes[i] && charts[i]) {
+                      panes[i].setHeight(charts[i].height)
+                    }
+                  }
+
+                  // Restore visible range to prevent jumping
+                  if (visibleRange) {
+                    chartRef.current.timeScale().setVisibleRange(visibleRange)
+                  }
+
+                  // Re-enable user interaction
+                  chartRef.current.applyOptions({
+                    handleScale: true,
+                    handleScroll: true,
+                  })
+                }
+
+                // Release resize lock after everything is done
+                setTimeout(() => {
+                  isResizing.current = false
+                }, 500)
+              } catch (e) {
+                console.error("Error during height adjustment:", e)
+                isResizing.current = false
+              }
+            }, 200)
+          } catch (e) {
+            console.error("Error during resize:", e)
+            isResizing.current = false
+          }
         }
-      }, 300) // 300ms debounce
+      }, 800) // Increased debounce time to 800ms
     }
 
     // Set up resize listener
     window.addEventListener("resize", handleResize)
+
+    // Add ResizeObserver for more precise container size tracking
+    const resizeObserver = new ResizeObserver((entries) => {
+      // Only trigger resize if we're not already resizing and enough time has passed
+      const now = Date.now()
+      if (
+        !isResizing.current &&
+        now - lastResizeTime.current > MIN_RESIZE_INTERVAL &&
+        chartStable &&
+        chartRef.current
+      ) {
+        handleResize()
+      }
+    })
+
+    // Observe the container element
+    if (chartContainerRef.current) {
+      resizeObserver.observe(chartContainerRef.current)
+    }
 
     // Only set initial value once and not during screenshot
     if (!hasSetInitialValue && !take_screenshot) {
@@ -521,14 +639,16 @@ function LightweightChartsComponent({
             setTimeout(resolve, 250)
           })
         )
-        const screenshot = chartRef.current!.takeScreenshot()
-        const dataUrl = screenshot.toDataURL("image/png")
-        await new Promise((resolve) => setTimeout(resolve, 100))
+        if (chartRef.current) {
+          const screenshot = chartRef.current.takeScreenshot()
+          const dataUrl = screenshot.toDataURL("image/png")
+          await new Promise((resolve) => setTimeout(resolve, 100))
 
-        Streamlit.setComponentValue({
-          type: "screenshot",
-          data: dataUrl,
-        })
+          Streamlit.setComponentValue({
+            type: "screenshot",
+            data: dataUrl,
+          })
+        }
       } catch (error) {
         console.error("Screenshot error:", error)
         Streamlit.setComponentValue({
@@ -566,15 +686,21 @@ function LightweightChartsComponent({
         window.clearTimeout(resizeTimeoutRef.current)
       }
 
+      // Clear stability timeout
+      if (stabilityTimeout.current) {
+        window.clearTimeout(stabilityTimeout.current)
+      }
+
+      // Disconnect the observer
+      resizeObserver.disconnect()
+
       window.removeEventListener("resize", handleResize)
       chart.remove()
       setThemeApplied(false)
     }
   }, [
-    charts,
-    theme,
-    hasSetInitialValue,
-    take_screenshot,
+    JSON.stringify(charts),
+    JSON.stringify(theme),
     zoom_level,
     fontsLoaded,
     configureTimeScale,
@@ -590,14 +716,16 @@ function LightweightChartsComponent({
               setTimeout(resolve, 250)
             })
           )
-          const screenshot = chartRef.current!.takeScreenshot()
-          const dataUrl = screenshot.toDataURL("image/png")
-          await new Promise((resolve) => setTimeout(resolve, 100))
+          if (chartRef.current) {
+            const screenshot = chartRef.current.takeScreenshot()
+            const dataUrl = screenshot.toDataURL("image/png")
+            await new Promise((resolve) => setTimeout(resolve, 100))
 
-          Streamlit.setComponentValue({
-            type: "screenshot",
-            data: dataUrl,
-          })
+            Streamlit.setComponentValue({
+              type: "screenshot",
+              data: dataUrl,
+            })
+          }
         } catch (error) {
           console.error("Screenshot error:", error)
           Streamlit.setComponentValue({
