@@ -3,10 +3,11 @@
   "version": "0.1.4",
   "private": true,
   "dependencies": {
+    "build": "^0.1.4",
+    "lightweight-charts": "^5.0.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "streamlit-component-lib": "^2.0.0",
-    "lightweight-charts": "^5.0.2"
+    "streamlit-component-lib": "^2.0.0"
   },
   "scripts": {
     "start": "react-scripts start",

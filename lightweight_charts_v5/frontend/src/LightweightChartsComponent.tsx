@@ -172,7 +172,7 @@ function LightweightChartsComponent({
   const [fontsLoaded, setFontsLoaded] = useState(false) // Add state to track font loading
   const isResizing = useRef(false)
   const lastResizeTime = useRef(Date.now())
-  const MIN_RESIZE_INTERVAL = 1000 // 1 second minimum between resizes
+  const MIN_RESIZE_INTERVAL = 500 // 1 second minimum between resizes
   const [chartStable, setChartStable] = useState(false)
   const stabilityTimeout = useRef<number | null>(null)
 
@@ -515,23 +515,12 @@ function LightweightChartsComponent({
 
     // Handle window resize events
     const handleResize = () => {
-      // Skip if already resizing or if not enough time has passed since last resize
-      const now = Date.now()
-      if (
-        isResizing.current ||
-        now - lastResizeTime.current < MIN_RESIZE_INTERVAL ||
-        !chartStable ||
-        !chartRef.current
-      ) {
-        return
-      }
-
       // Clear any existing timeout
       if (resizeTimeoutRef.current) {
         window.clearTimeout(resizeTimeoutRef.current)
       }
 
-      // Set new timeout with increased debounce
+      // Set new timeout with moderate debounce
       resizeTimeoutRef.current = window.setTimeout(() => {
         if (
           chartContainerRef.current &&
@@ -542,78 +531,52 @@ function LightweightChartsComponent({
           lastResizeTime.current = Date.now()
 
           try {
-            // Temporarily disable user interaction during resize
-            chartRef.current.applyOptions({
-              handleScale: false,
-              handleScroll: false,
-            })
-
+            // Get new dimensions
             const newWidth = chartContainerRef.current.clientWidth
 
             // Store visible range before resize
             const visibleRange = chartRef.current.timeScale().getVisibleRange()
 
-            // Perform resize with a single operation
+            // Perform resize
             chartRef.current.resize(newWidth, totalHeight)
 
-            // Wait for resize to complete before adjusting panes
+            // Apply heights after a short delay
             setTimeout(() => {
               try {
-                // Apply heights in a controlled sequence
                 if (chartRef.current) {
-                  const panes = chartRef.current.panes()
+                  setRelativeHeights() // Use the existing function for consistent height setting
 
-                  // Process from bottom to top for stability
-                  for (let i = panes.length - 1; i >= 0; i--) {
-                    if (panes[i] && charts[i]) {
-                      panes[i].setHeight(charts[i].height)
-                    }
-                  }
-
-                  // Restore visible range to prevent jumping
+                  // Restore visible range
                   if (visibleRange) {
                     chartRef.current.timeScale().setVisibleRange(visibleRange)
                   }
-
-                  // Re-enable user interaction
-                  chartRef.current.applyOptions({
-                    handleScale: true,
-                    handleScroll: true,
-                  })
                 }
 
-                // Release resize lock after everything is done
+                // Release resize lock
                 setTimeout(() => {
                   isResizing.current = false
-                }, 500)
+                }, 200)
               } catch (e) {
                 console.error("Error during height adjustment:", e)
                 isResizing.current = false
               }
-            }, 200)
+            }, 100)
           } catch (e) {
             console.error("Error during resize:", e)
             isResizing.current = false
           }
         }
-      }, 800) // Increased debounce time to 800ms
+      }, 250) // Reduced debounce time for better responsiveness
     }
 
     // Set up resize listener
     window.addEventListener("resize", handleResize)
 
-    // Add ResizeObserver for more precise container size tracking
     const resizeObserver = new ResizeObserver((entries) => {
-      // Only trigger resize if we're not already resizing and enough time has passed
-      const now = Date.now()
-      if (
-        !isResizing.current &&
-        now - lastResizeTime.current > MIN_RESIZE_INTERVAL &&
-        chartStable &&
-        chartRef.current
-      ) {
+      // Force handleResize to be called when container size changes
+      requestAnimationFrame(() => {
         handleResize()
-      }
+      })
     })
 
     // Observe the container element
