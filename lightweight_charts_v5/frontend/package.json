@@ -1,9 +1,8 @@
 {
   "name": "lightweight-charts-v5",
-  "version": "0.1.4",
+  "version": "0.1.7",
   "private": true,
   "dependencies": {
-    "build": "^0.1.4",
     "lightweight-charts": "^5.0.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

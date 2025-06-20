@@ -19,14 +19,20 @@ Python-side streamlit demo_chart.py
 - pip install -e .
 - Cmd-Shift D to run streamlit again in the debugger
 
-Tag and check in
+New Release
 ----------------
-- git tag -n
-- update __version__ in 
- - front_end/__init__,py 
- - front_end/setup.py 
- - front_end/package.json
-- git_push_version.sh <new version> "Comment for new version"
+# Remove previous build artifacts
+rm -rf build/ dist/ *.egg-info/
+
+# Build the frontend
+cd lightweight_charts_v5/frontend
+npm install
+npm run build
+cd ../..
+
+# Build the Python package
+python -m pip install --upgrade build
+python -m build
 
 Deploy to PyPi
 --------------
