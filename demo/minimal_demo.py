@@ -8,7 +8,7 @@ data = yf.download(ticker, period="100d", interval="1d", auto_adjust=False)
 
 # Convert data to Lightweight Charts format, ensuring values are proper floats
 chart_data = [
-    {"time": str(date.date()), "value": float(row["Close"].iloc[0])}  
+    {"time": str(date.date()), "value": float(row["Close"])}
     for date, row in data.iterrows()
 ]
 
