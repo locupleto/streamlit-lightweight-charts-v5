@@ -28,8 +28,10 @@ Key features:
 python3 -m venv venv
 source venv/bin/activate
 pip install streamlit-lightweight-charts-v5
-pip install streamlit yfinance numpy  # for running demos
+pip install yfinance>=1.0  # Required: v1.0+ to avoid rate limiting
 ```
+
+**Note:** yfinance 1.0 or higher is required to avoid Yahoo Finance API rate limiting issues.
 
 ## Quick Start
 
@@ -44,7 +46,7 @@ data = yf.download(ticker, period="100d", interval="1d", auto_adjust=False)
 
 # Convert data to Lightweight Charts format, ensuring values are proper floats
 chart_data = [
-    {"time": str(date.date()), "value": float(row["Close"].iloc[0])}  
+    {"time": str(date.date()), "value": float(row["Close"])}
     for date, row in data.iterrows()
 ]
 
