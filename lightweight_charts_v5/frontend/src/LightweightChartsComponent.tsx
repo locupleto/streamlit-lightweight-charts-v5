@@ -16,12 +16,10 @@
  * NOTES ON KEY CHALLENGES & SOLUTIONS:
  *
  * 1. Pane Height Initialization:
- * Initial challenge was achieving at least reasonable accurate initial pane
- * heights. Following the example in the documentation didn't work.
- * The current solution involves:
- * - Setting pane heights from bottom to top (reverse order)
- * - Using async/await with small delays between height settings
- * - Ensuring sequential height application before other chart operations
+ * Uses the setStretchFactor() API (introduced in v5.0.8) to set relative
+ * pane heights. This eliminates the need for the previous elaborate workaround
+ * that involved async delays and bottom-to-top sequential height setting.
+ * The new approach is synchronous, faster, and more reliable.
  *
  * 2. Window Resize Race Condition:
  * Aggressive window resizing could trigger "Object is disposed" errors
@@ -429,41 +427,26 @@ function LightweightChartsComponent({
       })
     })
     /**
-     * CRITICAL SECTION: Pane Height Initialization
+     * Pane Height Initialization using setStretchFactor()
      *
-     * This async function is key to achieving correct pane heights.
-     * It works by:
-     * 1. Processing panes from bottom to top (reverse order)
-     * 2. Setting each height with a small delay between operations
-     * 3. Ensuring sequential execution through async/await
+     * Uses the v5.0.8+ setStretchFactor() API to set relative pane heights.
+     * This is synchronous and eliminates the need for async delays.
      *
-     * This approach prevents the "collapse" effect where middle panes
-     * would minimize to their smallest possible height.
+     * Stretch factors are relative proportions - if pane1 has factor 0.7 and
+     * pane2 has factor 0.3, they will take 70% and 30% of total height respectively.
      */
-    const initializePaneHeights = async () => {
+    const initializePaneHeights = () => {
       const panes = chart.panes()
 
-      // First pass: set all panes to minimum height to avoid conflicts
-      for (let i = 0; i < panes.length; i++) {
-        panes[i].setHeight(30) // Minimum height
-      }
+      // Calculate total height from all pane configs
+      const totalConfigHeight = charts.reduce((sum: number, config: ChartConfig) => sum + config.height, 0)
 
-      // Small delay to let the layout settle
-      await new Promise((resolve) => setTimeout(resolve, 50))
-
-      // Second pass: set actual heights from bottom to top
-      for (let i = panes.length - 1; i >= 0; i--) {
-        const pane = panes[i]
-        const targetHeight = charts[i].height
-
-        pane.setHeight(targetHeight)
-
-        // Wait between each height setting
-        await new Promise((resolve) => setTimeout(resolve, 30))
-      }
-
-      // Final delay to ensure all changes are applied
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      // Set stretch factor for each pane based on its proportion of total height
+      panes.forEach((pane, index) => {
+        const targetHeight = charts[index].height
+        const stretchFactor = targetHeight / totalConfigHeight
+        pane.setStretchFactor(stretchFactor)
+      })
     }
 
     // Get all panes after series creation
@@ -514,28 +497,30 @@ function LightweightChartsComponent({
     /**
      * Regular resize height handling
      * Used for window resize events after initial setup
+     *
+     * Uses setStretchFactor() for consistent behavior with initialization.
+     * Stretch factors are relative and automatically adapt to container size.
      */
     const setRelativeHeights = () => {
       if (!chartRef.current) return
 
-      const currentTotalHeight =
-        chartContainerRef.current?.clientHeight || totalHeight
       const panes = chartRef.current.panes()
+      const totalConfigHeight = charts.reduce((sum: number, config: ChartConfig) => sum + config.height, 0)
 
       panes.forEach((pane, index) => {
         if (pane) {
           const targetHeight = charts[index].height
-          const proportion = targetHeight / totalHeight
-          const allocatedHeight = Math.floor(currentTotalHeight * proportion)
-          pane.setHeight(Math.max(allocatedHeight, 30)) // Ensure minimum height
+          const stretchFactor = targetHeight / totalConfigHeight
+          pane.setStretchFactor(stretchFactor)
         }
       })
     }
 
-    // Initialize pane heights and then set up chart view
-    initializePaneHeights().then(() => {
-      if (!chartRef.current) return
+    // Initialize pane heights (synchronous with setStretchFactor)
+    initializePaneHeights()
 
+    // Set up chart view immediately after height initialization
+    if (chartRef.current) {
       // Set initial zoom level after heights are established
       const mainSeriesData = charts[0].series[0].data
       if (mainSeriesData?.length >= zoom_level) {
@@ -557,7 +542,7 @@ function LightweightChartsComponent({
       stabilityTimeout.current = window.setTimeout(() => {
         setChartStable(true)
       }, 2000) // 2 seconds should be enough for initial rendering
-    })
+    }
 
     // Handle window resize events
     const handleResize = () => {
