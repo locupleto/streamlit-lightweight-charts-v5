@@ -6,7 +6,7 @@ object-assign
 
 /*!
  * @license
- * TradingView Lightweight Charts™ v5.0.3
+ * TradingView Lightweight Charts™ v5.1.0
  * Copyright (c) 2025 TradingView, Inc.
  * Licensed under Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0
  */

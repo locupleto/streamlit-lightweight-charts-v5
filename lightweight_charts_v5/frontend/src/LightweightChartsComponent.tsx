@@ -86,6 +86,7 @@ interface SeriesConfig {
     }
     independent?: boolean // Whether this series uses its own price scale
     alignLabels?: boolean
+    visualHeightFraction?: number // Height as fraction of chart (e.g., 0.1 for 10%)
   }
   markers?: SeriesMarker[]
   label?: string // Series label (especially useful for overlays)
@@ -150,6 +151,20 @@ interface RectangleData {
   borderWidth?: number
   opacity?: number
   zOrder?: "top" | "bottom" // Add z-order parameter
+}
+
+/**
+ * Calculate the maximum value in a dataset
+ */
+function calculateMaxValue(data: any[]): number {
+  if (!data || data.length === 0) return 0
+
+  const values = data
+    .map(d => d.value)
+    .filter(v => v != null && !isNaN(v) && isFinite(v))
+
+  if (values.length === 0) return 0
+  return Math.max(...values)
 }
 
 function LightweightChartsComponent({
@@ -331,7 +346,38 @@ function LightweightChartsComponent({
     })
 
     /**
-     * Third Phase: Set markers for the series that have them
+     * Third Phase: Apply visual height fraction to price scales
+     * Uses setVisibleRange() API to control overlay height
+     */
+    charts.forEach((paneConfig: ChartConfig, paneIndex: number) => {
+      paneConfig.series.forEach((s: SeriesConfig, seriesIndex: number) => {
+        // Only process series with visualHeightFraction specified
+        if (s.priceScale?.visualHeightFraction && s.data && s.options?.priceScaleId) {
+          const priceScaleId = s.options.priceScaleId
+
+          // Get the price scale API
+          const priceScale = chart.priceScale(priceScaleId)
+
+          // Calculate max value from data
+          const maxValue = calculateMaxValue(s.data)
+
+          if (maxValue > 0) {
+            // Calculate padded range (e.g., 10x for 10% height)
+            const paddingMultiplier = 1 / s.priceScale.visualHeightFraction
+            const paddedMax = maxValue * paddingMultiplier
+
+            // Set explicit visible range
+            priceScale.setVisibleRange({
+              from: 0,
+              to: paddedMax
+            })
+          }
+        }
+      })
+    })
+
+    /**
+     * Fourth Phase: Set markers for the series that have them
      */
     charts.forEach((paneConfig: ChartConfig, paneIndex: number) => {
       paneConfig.series.forEach((s: SeriesConfig, seriesIndex: number) => {
@@ -350,7 +396,7 @@ function LightweightChartsComponent({
     })
 
     /**
-     * Fourth Phase: Add rectangles to series that have them
+     * Fifth Phase: Add rectangles to series that have them
      */
     const rectangleInstances: StaticRectangle[] = []
     charts.forEach((paneConfig: ChartConfig, paneIndex: number) => {
