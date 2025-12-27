@@ -34,8 +34,25 @@ cd ../..
 python -m pip install --upgrade build
 python -m build
 
-Deploy to PyPi
---------------
-- python setup.py sdist bdist_wheel
-- (pip install twine)
-- twine upload dist/*  (paste token from Documents/Licenses/PyPI-Token.txt)
+Deploy to PyPI (Test First!)
+-----------------------------
+
+## Step 1: Test Deploy to TestPyPI (ALWAYS DO THIS FIRST)
+# Clean previous builds
+rm -rf build/ dist/ *.egg-info/
+
+# Build the package
+python -m pip install --upgrade build twine
+python -m build
+
+# Upload to TestPyPI (use TestPyPI token)
+twine upload --repository testpypi dist/*
+# Token from: https://test.pypi.org/manage/account/token/
+
+# Test installation in another project
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple streamlit-lightweight-charts-v5==0.1.8
+
+## Step 2: Deploy to Production PyPI (after testing!)
+# Only run this after confirming TestPyPI package works!
+twine upload dist/*
+# Token from: Documents/Licenses/PyPI-Token.txt
