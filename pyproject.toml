@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streamlit-lightweight-charts-v5"
+version = "0.1.8"
+description = "Streamlit component for viewing v5 Lightweight Charts"
+readme = "README.md"
+authors = [
+    {name = "Urban Ottosson", email = "urban@ottosson.org"}
+]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "streamlit >= 0.63",
+]
+
+[project.urls]
+Homepage = "https://github.com/locupleto/streamlit-lightweight-charts-v5"
+
+[project.optional-dependencies]
+devel = [
+    "wheel",
+    "pytest==7.4.0",
+    "playwright==1.48.0",
+    "requests==2.31.0",
+    "pytest-playwright-snapshot==1.0",
+    "pytest-rerunfailures==12.0",
+]
+demo = [
+    "yfinance",
+    "numpy",
+]
+
+[tool.setuptools]
+packages = ["lightweight_charts_v5"]
+include-package-data = true
+license-files = []
