@@ -143,3 +143,4 @@ optimization_results
 # nodejs stuff...
 my_component/frontend/node_modules/.bin/
 node_modules
+test_venv/
