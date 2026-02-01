@@ -180,16 +180,20 @@ def main():
             # Calculate total height
             total_height = sum(indicator.height for indicator in indicators)
 
-            # Display chart the chart
-            result = lightweight_charts_v5_component(
-                name=symbol,
-                charts=charts_config,
-                height=total_height,
-                zoom_level=150,
-                take_screenshot=take_screenshot,
-                fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,
-                key=f"chart_{demo_type}"
-            )
+            # Wrap chart in fragment to prevent component reruns from triggering page reruns
+            @st.fragment
+            def render_stock_chart():
+                return lightweight_charts_v5_component(
+                    name=symbol,
+                    charts=charts_config,
+                    height=total_height,
+                    zoom_level=150,
+                    take_screenshot=take_screenshot,
+                    fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,
+                    key=f"chart_{demo_type}"
+                )
+
+            result = render_stock_chart()
 
             # Handle screenshot data if such is returned from the component
             if take_screenshot:
@@ -205,16 +209,20 @@ def main():
         total_height = 400
         symbol = "Yield Curve"
 
-        # Display chart
-        result = lightweight_charts_v5_component(
-            name=symbol,
-            charts=charts_config,
-            height=total_height,
-            zoom_level=200,
-            take_screenshot=take_screenshot,
-            fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,  # This is correct
-            key=f"chart_{demo_type}"
-        )
+        # Wrap chart in fragment to prevent component reruns from triggering page reruns
+        @st.fragment
+        def render_yield_curve():
+            return lightweight_charts_v5_component(
+                name=symbol,
+                charts=charts_config,
+                height=total_height,
+                zoom_level=200,
+                take_screenshot=take_screenshot,
+                fonts=HANDWRITTEN_FONTS if selected_theme == "Custom" else None,
+                key=f"chart_{demo_type}"
+            )
+
+        result = render_yield_curve()
 
         # Handle screenshot data if such is returned from the component
         if take_screenshot:

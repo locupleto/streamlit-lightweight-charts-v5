@@ -30,18 +30,24 @@ def run_multi_chart_demo(theme, selected_theme_name):
         years = int(selected_history.split()[0])
         period = f"{years}y"
 
-    # Create rows for the grid
-    for i in range(0, len(LARGE_US_STOCKS), 2):
-        cols = st.columns(2)
+    # Wrap chart grid in fragment to prevent chart component reruns
+    # from triggering full page reruns
+    @st.fragment
+    def render_chart_grid():
+        # Create rows for the grid
+        for i in range(0, len(LARGE_US_STOCKS), 2):
+            cols = st.columns(2)
 
-        # First column
-        with cols[0]:
-            display_chart(LARGE_US_STOCKS[i], period, theme, selected_theme_name)
+            # First column
+            with cols[0]:
+                display_chart(LARGE_US_STOCKS[i], period, theme, selected_theme_name)
 
-        # Second column (if available)
-        if i + 1 < len(LARGE_US_STOCKS):
-            with cols[1]:
-                display_chart(LARGE_US_STOCKS[i + 1], period, theme, selected_theme_name)
+            # Second column (if available)
+            if i + 1 < len(LARGE_US_STOCKS):
+                with cols[1]:
+                    display_chart(LARGE_US_STOCKS[i + 1], period, theme, selected_theme_name)
+
+    render_chart_grid()
 
 def display_chart(symbol_info, period, theme, selected_theme_name):
     try:
