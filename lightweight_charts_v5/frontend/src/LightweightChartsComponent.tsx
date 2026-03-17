@@ -405,23 +405,22 @@ function LightweightChartsComponent({
           seriesInstances[paneIndex][seriesIndex]
         ) {
           s.rectangles.forEach((rect: RectangleData) => {
-            // Create the rectangle with proper coordinates
-            const rectangle = new StaticRectangle(
-              chart,
-              seriesInstances[paneIndex][seriesIndex],
-              {
-                startTime: rect.startTime,
-                startPrice: rect.startPrice,
-                endTime: rect.endTime,
-                endPrice: rect.endPrice,
-                fillColor: rect.fillColor,
-                borderColor: rect.borderColor || "#000000",
-                borderWidth: rect.borderWidth || 2,
-                opacity: rect.opacity || 0.7,
-                zOrder: rect.zOrder || "bottom", // Add z-order parameter with default
-              }
-            )
-            rectangleInstances.push(rectangle)
+              const rectangle = new StaticRectangle(
+                chart,
+                seriesInstances[paneIndex][seriesIndex],
+                {
+                  startTime: rect.startTime,
+                  startPrice: rect.startPrice,
+                  endTime: rect.endTime,
+                  endPrice: rect.endPrice,
+                  fillColor: rect.fillColor,
+                  borderColor: rect.borderColor || "#000000",
+                  borderWidth: rect.borderWidth || 2,
+                  opacity: rect.opacity || 0.7,
+                  zOrder: rect.zOrder || "bottom",
+                }
+              )
+              rectangleInstances.push(rectangle)
           })
         }
       })
