@@ -522,10 +522,19 @@ function LightweightChartsComponent({
     if (chartRef.current) {
       // Set initial zoom level after heights are established
       const mainSeriesData = charts[0].series[0].data
+      // Find the latest date across all series in the first pane so that
+      // overlay series (e.g. volume profile reference) extend the view
+      let latestTime = mainSeriesData?.[mainSeriesData.length - 1]?.time
+      for (const s of charts[0].series) {
+        if (s.data?.length) {
+          const last = s.data[s.data.length - 1].time
+          if (last > latestTime) latestTime = last
+        }
+      }
       if (mainSeriesData?.length >= zoom_level) {
         chartRef.current.timeScale().setVisibleRange({
           from: mainSeriesData[mainSeriesData.length - zoom_level].time,
-          to: mainSeriesData[mainSeriesData.length - 1].time,
+          to: latestTime,
         })
       } else {
         chartRef.current.timeScale().fitContent()

@@ -8,8 +8,9 @@ These files can be run directly with `streamlit run`:
 
 | File | Command | Description |
 |------|---------|-------------|
-| `chart_demo.py` | `streamlit run demo/chart_demo.py` | Full-featured demo with multiple chart types, themes, indicators, and screenshot functionality. Includes StockChart, Yield Curve, and Multi-Chart demos via dropdown selector. |
+| `chart_demo.py` | `streamlit run demo/chart_demo.py` | Full-featured demo with multiple chart types, themes, indicators, and screenshot functionality. Includes StockChart, Volume Profile, Yield Curve, and Multi-Chart demos via dropdown selector. |
 | `minimal_demo.py` | `streamlit run demo/minimal_demo.py` | Simple example showing basic AAPL stock chart with minimal code. Good starting point for new users. |
+| `volume_profile_demo.py` | `streamlit run demo/volume_profile_demo.py` | Volume profile overlay demo showing pivot-based horizontal volume distribution rendered as rectangles on a candlestick chart. Includes sidebar controls for bins, pivot strength, and value area. |
 | `test_component.py` | `streamlit run demo/test_component.py` | Component test using generated data (no API calls). Useful for verifying the component works without external dependencies. |
 
 ## Library Modules (Not Runnable)
@@ -19,7 +20,7 @@ These files are **supporting modules** imported by the runnable demos. Running t
 | File | Purpose |
 |------|---------|
 | `chart_themes.py` | Defines `ChartTheme` dataclass and `ChartThemes` with predefined themes (light, dark, black, custom). |
-| `indicators.py` | Defines technical indicator classes: `PriceIndicator`, `VolumeIndicator`, `SMAIndicator`, `RSIIndicator`, `MACDIndicator`, `WilliamsRIndicator`. |
+| `indicators.py` | Defines technical indicator classes: `PriceIndicator`, `VolumeIndicator`, `VolumeProfileIndicator`, `SMAIndicator`, `RSIIndicator`, `MACDIndicator`, `WilliamsRIndicator`. |
 | `multi_demo.py` | Contains `run_multi_chart_demo()` function for displaying multiple stock charts in a grid layout. |
 | `yield_curve.py` | Contains `get_yield_curve_config()` function for yield curve chart configuration. |
 
@@ -33,6 +34,7 @@ streamlit run demo/chart_demo.py
 
 Then use the **"Select Demo"** dropdown in the top-left to choose:
 - **StockChart Demo** - Candlestick/Bar/Line charts with technical indicators
+- **Volume Profile Demo** - Pivot-based horizontal volume distribution overlay with POC and value area
 - **Yield Curve Demo** - Interest rate yield curve visualization
 - **Multi-Chart Demo** - Grid of multiple stock area charts
 

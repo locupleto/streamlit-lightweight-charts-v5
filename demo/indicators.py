@@ -553,6 +553,355 @@ class RSIIndicator(Indicator):
             "title": "RSI(14)"  
         }
 
+class VolumeProfileIndicator(OverlayIndicator):
+    """
+    Pivot-based volume profile overlay indicator.
+
+    Finds the most recent confirmed pivot (high or low), accumulates volume
+    from that pivot to the current bar into horizontal price bins, and renders
+    each bin as a rectangle placed after the price data.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame with OHLCV data and string dates
+    left_strength : int
+        Pivot detection left bars (default: 20)
+    right_strength : int
+        Pivot detection right bars (default: 20)
+    num_bins : int
+        Number of horizontal price bins (default: 40)
+    profile_bar_count : int
+        Number of future date slots for profile width (default: 20)
+    show_poc : bool
+        Highlight Point of Control bin (default: True)
+    show_value_area : bool
+        Show value area background rectangle (default: True)
+    value_area_percent : float
+        Percentage of total volume for value area (default: 50.0)
+    low_volume_color : str
+        RGB string for low volume bins (default: "238, 235, 78")
+    high_volume_color : str
+        RGB string for high volume bins (default: "220, 20, 60")
+    poc_color : str
+        RGB string for POC bin (default: "179, 179, 179")
+    value_area_color : str
+        RGB string for value area background (default: "166, 176, 184")
+    bar_opacity : float
+        Opacity for volume bars (default: 0.85)
+    """
+
+    def __init__(self, df: pd.DataFrame,
+                 left_strength: int = 20,
+                 right_strength: int = 20,
+                 num_bins: int = 40,
+                 profile_bar_count: int = 20,
+                 show_poc: bool = True,
+                 show_value_area: bool = True,
+                 value_area_percent: float = 50.0,
+                 low_volume_color: str = "238, 235, 78",
+                 high_volume_color: str = "220, 20, 60",
+                 poc_color: str = "179, 179, 179",
+                 value_area_color: str = "166, 176, 184",
+                 bar_opacity: float = 0.85):
+        self.df = df.copy()
+        self.left_strength = left_strength
+        self.right_strength = right_strength
+        self.num_bins = num_bins
+        self.profile_bar_count = profile_bar_count
+        self.show_poc = show_poc
+        self.show_value_area = show_value_area
+        self.value_area_percent = value_area_percent
+        self.bar_opacity = bar_opacity
+
+        self._low_volume_rgb = self._parse_rgb(low_volume_color)
+        self._high_volume_rgb = self._parse_rgb(high_volume_color)
+        self._poc_rgb = self._parse_rgb(poc_color)
+        self._value_area_rgb = self._parse_rgb(value_area_color)
+
+        self._bin_volumes = np.array([])
+        self._bin_edges = np.array([])
+        self._poc_idx = -1
+        self._va_high_idx = -1
+        self._va_low_idx = -1
+        self._pivot_bar_idx = -1
+        self._historical_length = len(df)
+        self._calculated = False
+
+        # Extend DataFrame with future dates for profile placement
+        self._extend_dataframe()
+
+    def _extend_dataframe(self) -> None:
+        """Extend DataFrame with future business dates for profile rectangle placement."""
+        if self.profile_bar_count <= 0:
+            return
+        last_date = pd.to_datetime(self.df['date'].iloc[-1])
+        future_dates = pd.bdate_range(
+            start=last_date + pd.tseries.offsets.BDay(1),
+            periods=self.profile_bar_count
+        )
+        extension_rows = []
+        last_row = self.df.iloc[-1].copy()
+        for date in future_dates:
+            new_row = last_row.copy()
+            new_row['date'] = date.strftime('%Y-%m-%d')
+            extension_rows.append(new_row)
+        extension_df = pd.DataFrame(extension_rows)
+        self.df = pd.concat([self.df, extension_df], ignore_index=True)
+
+    @staticmethod
+    def _parse_rgb(rgb_str: str) -> tuple:
+        """Parse 'r, g, b' string to (int, int, int) tuple."""
+        parts = [int(x.strip()) for x in rgb_str.split(',')]
+        return (parts[0], parts[1], parts[2])
+
+    def _find_pivots_high(self, df: pd.DataFrame) -> List[int]:
+        """Find pivot high points."""
+        if len(df) < (self.left_strength + self.right_strength + 1):
+            return []
+        pivots = []
+        for i in range(self.left_strength, len(df) - self.right_strength):
+            try:
+                if (all(df['high'].iloc[i] > df['high'].iloc[i - j] for j in range(1, self.left_strength + 1)) and
+                        all(df['high'].iloc[i] > df['high'].iloc[i + j] for j in range(1, self.right_strength + 1))):
+                    pivots.append(i)
+            except (IndexError, KeyError):
+                continue
+        return pivots
+
+    def _find_pivots_low(self, df: pd.DataFrame) -> List[int]:
+        """Find pivot low points."""
+        if len(df) < (self.left_strength + self.right_strength + 1):
+            return []
+        pivots = []
+        for i in range(self.left_strength, len(df) - self.right_strength):
+            try:
+                if (all(df['low'].iloc[i] < df['low'].iloc[i - j] for j in range(1, self.left_strength + 1)) and
+                        all(df['low'].iloc[i] < df['low'].iloc[i + j] for j in range(1, self.right_strength + 1))):
+                    pivots.append(i)
+            except (IndexError, KeyError):
+                continue
+        return pivots
+
+    def _interpolate_color(self, ratio: float) -> str:
+        """Linear RGB interpolation between low_volume_color and high_volume_color."""
+        ratio = max(0.0, min(1.0, ratio))
+        r = int(self._low_volume_rgb[0] + (self._high_volume_rgb[0] - self._low_volume_rgb[0]) * ratio)
+        g = int(self._low_volume_rgb[1] + (self._high_volume_rgb[1] - self._low_volume_rgb[1]) * ratio)
+        b = int(self._low_volume_rgb[2] + (self._high_volume_rgb[2] - self._low_volume_rgb[2]) * ratio)
+        return f"rgba({r}, {g}, {b}, {self.bar_opacity})"
+
+    def _calculate_value_area(self) -> tuple:
+        """Expand outward from POC to find value area bins."""
+        if len(self._bin_volumes) == 0 or self._poc_idx < 0:
+            return (0, len(self._bin_volumes) - 1)
+        total_volume = np.sum(self._bin_volumes)
+        if total_volume <= 0:
+            return (0, len(self._bin_volumes) - 1)
+
+        target_volume = total_volume * (self.value_area_percent / 100.0)
+        accumulated = self._bin_volumes[self._poc_idx]
+        low_idx = self._poc_idx
+        high_idx = self._poc_idx
+
+        while accumulated < target_volume:
+            can_go_up = high_idx + 1 < len(self._bin_volumes)
+            can_go_down = low_idx - 1 >= 0
+            if not can_go_up and not can_go_down:
+                break
+            up_vol = self._bin_volumes[high_idx + 1] if can_go_up else -1
+            down_vol = self._bin_volumes[low_idx - 1] if can_go_down else -1
+            if up_vol >= down_vol:
+                high_idx += 1
+                accumulated += self._bin_volumes[high_idx]
+            else:
+                low_idx -= 1
+                accumulated += self._bin_volumes[low_idx]
+
+        return (low_idx, high_idx)
+
+    def calculate(self) -> None:
+        """Calculate volume profile from most recent confirmed pivot to last bar."""
+        if self._calculated:
+            return
+
+        historical_df = self.df.iloc[:self._historical_length]
+        min_bars = self.left_strength + self.right_strength + 1
+        if len(historical_df) < min_bars:
+            self._calculated = True
+            return
+
+        # Find all confirmed pivots
+        pivot_highs = self._find_pivots_high(historical_df)
+        pivot_lows = self._find_pivots_low(historical_df)
+
+        all_pivots = []
+        for idx in pivot_highs:
+            if idx + self.right_strength < self._historical_length:
+                all_pivots.append(idx)
+        for idx in pivot_lows:
+            if idx + self.right_strength < self._historical_length:
+                all_pivots.append(idx)
+
+        if not all_pivots:
+            self._calculated = True
+            return
+
+        self._pivot_bar_idx = max(all_pivots)
+
+        # Price range from pivot to last historical bar
+        segment = historical_df.iloc[self._pivot_bar_idx:self._historical_length]
+        if len(segment) < 2:
+            self._calculated = True
+            return
+
+        price_low = segment['low'].min()
+        price_high = segment['high'].max()
+        if price_high <= price_low or np.isnan(price_low) or np.isnan(price_high):
+            self._calculated = True
+            return
+
+        # Create price bins and distribute volume
+        self._bin_edges = np.linspace(price_low, price_high, self.num_bins + 1)
+        self._bin_volumes = np.zeros(self.num_bins)
+
+        for bar_idx in range(self._pivot_bar_idx, self._historical_length):
+            bar_low = historical_df['low'].iloc[bar_idx]
+            bar_high = historical_df['high'].iloc[bar_idx]
+            bar_volume = historical_df['volume'].iloc[bar_idx]
+
+            if bar_low is None or bar_high is None or bar_volume is None:
+                continue
+            if np.isnan(bar_low) or np.isnan(bar_high) or np.isnan(bar_volume):
+                continue
+
+            candle_range = bar_high - bar_low
+            if candle_range <= 0:
+                bin_idx = np.searchsorted(self._bin_edges, bar_low, side='right') - 1
+                bin_idx = max(0, min(self.num_bins - 1, bin_idx))
+                self._bin_volumes[bin_idx] += bar_volume
+                continue
+
+            for b in range(self.num_bins):
+                bin_bottom = self._bin_edges[b]
+                bin_top = self._bin_edges[b + 1]
+                overlap_low = max(bar_low, bin_bottom)
+                overlap_high = min(bar_high, bin_top)
+                overlap = max(0.0, overlap_high - overlap_low)
+                if overlap > 0:
+                    fraction = overlap / candle_range
+                    self._bin_volumes[b] += bar_volume * fraction
+
+        # Find POC and value area
+        if np.sum(self._bin_volumes) > 0:
+            self._poc_idx = int(np.argmax(self._bin_volumes))
+        else:
+            self._poc_idx = 0
+        self._va_low_idx, self._va_high_idx = self._calculate_value_area()
+        self._calculated = True
+
+    def get_rectangles(self) -> List[Dict[str, Any]]:
+        """Generate rectangle data for volume profile bins."""
+        if not self._calculated:
+            self.calculate()
+
+        if len(self._bin_volumes) == 0 or np.sum(self._bin_volumes) <= 0:
+            return []
+
+        profile_start_idx = self._historical_length
+        if profile_start_idx >= len(self.df):
+            return []
+
+        profile_dates = [str(d) for d in self.df['date'].iloc[profile_start_idx:].values]
+        if len(profile_dates) < 2:
+            return []
+
+        max_vol = np.max(self._bin_volumes)
+        if max_vol <= 0:
+            return []
+
+        rectangles = []
+        last_date_idx = len(profile_dates) - 1
+
+        # Value area background rectangle
+        if self.show_value_area and self._va_low_idx >= 0 and self._va_high_idx >= 0:
+            va_bottom = float(self._bin_edges[self._va_low_idx])
+            va_top = float(self._bin_edges[min(self._va_high_idx + 1, self.num_bins)])
+            r, g, b = self._value_area_rgb
+            rectangles.append({
+                "startTime": profile_dates[0],
+                "startPrice": va_top,
+                "endTime": profile_dates[-1],
+                "endPrice": va_bottom,
+                "fillColor": f"rgba({r}, {g}, {b}, 0.25)",
+                "borderColor": f"rgba({r}, {g}, {b}, 0.45)",
+                "borderWidth": 1,
+            })
+
+        # Volume bin rectangles — bars grow from RIGHT to LEFT
+        for b in range(self.num_bins):
+            vol = self._bin_volumes[b]
+            if vol <= 0:
+                continue
+
+            ratio = vol / max_vol
+            bin_bottom = float(self._bin_edges[b])
+            bin_top = float(self._bin_edges[b + 1])
+
+            bar_width = int(round(ratio * last_date_idx))
+            bar_width = max(1, min(bar_width, last_date_idx))
+            start_date_idx = last_date_idx - bar_width
+
+            if self.show_poc and b == self._poc_idx:
+                r, g, b_color = self._poc_rgb
+                fill_color = f"rgba({r}, {g}, {b_color}, {self.bar_opacity})"
+            else:
+                fill_color = self._interpolate_color(ratio)
+
+            rectangles.append({
+                "startTime": profile_dates[start_date_idx],
+                "startPrice": bin_top,
+                "endTime": profile_dates[-1],
+                "endPrice": bin_bottom,
+                "fillColor": fill_color,
+                "borderColor": "rgba(0, 0, 0, 0)",
+                "borderWidth": 0,
+            })
+
+        return rectangles
+
+    def get_series_configs(self) -> List[Dict[str, Any]]:
+        """Return invisible reference series so the time scale includes profile dates."""
+        if not self._calculated or len(self._bin_volumes) == 0:
+            return []
+
+        profile_start = self._historical_length
+        if profile_start >= len(self.df):
+            return []
+
+        ref_data = []
+        for i in range(profile_start, len(self.df)):
+            date_val = self.df['date'].iloc[i]
+            date_str = str(date_val) if not isinstance(date_val, str) else date_val
+            ref_data.append({"time": date_str, "value": 0})
+
+        if not ref_data:
+            return []
+
+        return [{
+            "type": "Line",
+            "data": ref_data,
+            "options": {
+                "color": "transparent",
+                "lineWidth": 0,
+                "priceLineVisible": False,
+                "visible": False,
+                "lastValueVisible": False,
+            },
+            "label": "VP Zoom Reference"
+        }]
+
+
 class WilliamsRIndicator(Indicator):
     def __init__(self, df: pd.DataFrame, height: int = None, period: int = 14, theme: Optional[ChartTheme] = None):
         super().__init__(df, height, theme)

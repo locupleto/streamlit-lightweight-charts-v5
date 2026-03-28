@@ -13,6 +13,7 @@ Key features:
 - Add your own favourite standalone technical indicators (RSI, MACD, Williams %R etc.)
 - Use overlay indicators (Moving Averages, AVWAP, Pivot Points...)
 - Support for drawing Rectangles for e.g. Support / Resistance areas from code
+- Volume Profile overlay with pivot-based horizontal volume distribution
 - Yield curve charts
 - Supports Screenshots
 
@@ -21,6 +22,8 @@ Key features:
 ![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_2.png)
 
 ![Screenshot](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_3.png)
+
+![Volume Profile](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_4.png)
 
 ## Installation
 
@@ -75,6 +78,7 @@ The repository includes a `demo/` directory with two example scripts that showca
 
 - `minimal_demo.py`: A minimal example using Yahoo Finance stock data
 - `chart_demo.py`: A slightly more advanced example with multiple indicators
+- `volume_profile_demo.py`: Volume profile overlay with configurable pivot detection, price bins, and value area
 - `chart_themes.py`: Theme customization examples for the chart_demo module.
 - `indicators.py`: Example indicators for the chart_demo module.
 - `yield_curve.py`: Yield curve example chart for the chart_demo module.
@@ -86,8 +90,9 @@ You can find the demo files in the [GitHub repository](https://github.com/locupl
 To test the two demo scripts, run them using **Streamlit**:
 
 ```bash
-streamlit run demo/minimal_demo.py  # Minimal example
-streamlit run demo/chart_demo.py    # Full demo with indicators
+streamlit run demo/minimal_demo.py          # Minimal example
+streamlit run demo/chart_demo.py            # Full demo with indicators
+streamlit run demo/volume_profile_demo.py   # Volume profile overlay demo
 ```
 
 ## License

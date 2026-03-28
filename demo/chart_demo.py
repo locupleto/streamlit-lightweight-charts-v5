@@ -40,7 +40,7 @@ def main():
     with col0:
         demo_type = st.selectbox(
             "Select Demo",
-            options=["StockChart Demo", "Yield Curve Demo", "Multi-Chart Demo"],
+            options=["StockChart Demo", "Volume Profile Demo", "Yield Curve Demo", "Multi-Chart Demo"],
             index=0
         )
 
@@ -60,7 +60,7 @@ def main():
 
     with col2:
         # Add symbol input for yfinance
-        if demo_type == "StockChart Demo":
+        if demo_type in ("StockChart Demo", "Volume Profile Demo"):
             symbol = st.text_input("Symbol", value=DEFAULT_SYMBOL)
 
     with col3:
@@ -196,6 +196,77 @@ def main():
             result = render_stock_chart()
 
             # Handle screenshot data if such is returned from the component
+            if take_screenshot:
+                handle_screenshot(result)
+
+        except Exception as e:
+            st.error(f"Error fetching data for {symbol}: {str(e)}")
+            return
+
+    elif demo_type == "Volume Profile Demo":
+        try:
+            ticker = yf.Ticker(symbol)
+            df = ticker.history(period="1000d")
+            df = df.reset_index()
+            df = df.rename(columns={
+                'Date': 'date', 'Open': 'open', 'High': 'high',
+                'Low': 'low', 'Close': 'close', 'Volume': 'volume'
+            })
+            df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+            df = df.replace({np.nan: None})
+            title = f"{symbol} - {ticker.info.get('shortName', 'Volume Profile')}"
+
+            # Volume Profile sidebar controls
+            st.sidebar.header("Volume Profile Settings")
+            num_bins = st.sidebar.slider("Price Bins", 10, 80, 40)
+            left_strength = st.sidebar.slider("Pivot Left Strength", 5, 50, 20)
+            right_strength = st.sidebar.slider("Pivot Right Strength", 5, 50, 20)
+            profile_bar_count = st.sidebar.slider("Profile Width (bars)", 5, 40, 20)
+            value_area_pct = st.sidebar.slider("Value Area %", 10, 90, 50)
+            show_poc = st.sidebar.checkbox("Show POC", value=True)
+            show_value_area = st.sidebar.checkbox("Show Value Area", value=True)
+
+            # Calculate volume profile
+            vp = VolumeProfileIndicator(
+                df,
+                left_strength=left_strength,
+                right_strength=right_strength,
+                num_bins=num_bins,
+                profile_bar_count=profile_bar_count,
+                show_poc=show_poc,
+                show_value_area=show_value_area,
+                value_area_percent=value_area_pct,
+            )
+            vp.calculate()
+
+            # Build chart panes
+            price_indicator = PriceIndicator(
+                df, height=500, title=title, style="Candlestick",
+                rectangles=vp.get_rectangles(), theme=theme,
+            )
+            price_indicator.calculate()
+            price_pane = price_indicator.pane()
+            price_pane["series"].extend(vp.get_series_configs())
+
+            volume_indicator = VolumeIndicator(df, height=120, theme=theme)
+            volume_indicator.calculate()
+
+            charts_config = [price_pane, volume_indicator.pane()]
+            total_height = 620
+
+            @st.fragment
+            def render_volume_profile():
+                return lightweight_charts_v5_component(
+                    name=symbol,
+                    charts=charts_config,
+                    height=total_height,
+                    zoom_level=150,
+                    take_screenshot=take_screenshot,
+                    key=f"chart_{demo_type}"
+                )
+
+            result = render_volume_profile()
+
             if take_screenshot:
                 handle_screenshot(result)
 
