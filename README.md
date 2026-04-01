@@ -34,7 +34,7 @@ pip install streamlit-lightweight-charts-v5
 pip install yfinance>=1.0  # Required: v1.0+ to avoid rate limiting
 ```
 
-**Note:** yfinance 1.0 or higher is required to avoid Yahoo Finance API rate limiting issues.
+**Note:** yfinance 1.0 or higher is required to avoid running into Yahoo Finance API rate limiting issues when running the demos.
 
 ## Quick Start
 
