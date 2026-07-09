@@ -15,13 +15,15 @@ def _is_dev_server_running():
     try:
         # Set a short timeout to avoid hanging
         s.settimeout(0.5)
-        s.connect(('localhost', 3001))
-        # Try to receive data to confirm it's actually the dev server
+        s.connect(('127.0.0.1', 3001))
+        # An HTTP server only responds after receiving a request
+        s.sendall(b"GET / HTTP/1.0\r\nHost: localhost\r\n\r\n")
         data = s.recv(1024)
-        s.close()
-        return len(data) > 0
-    except:
+        return data.startswith(b"HTTP/")
+    except OSError:
         return False
+    finally:
+        s.close()
 
 # Use dev server if it's running and we're in dev mode, otherwise use build
 if not _RELEASE and _is_dev_server_running():
