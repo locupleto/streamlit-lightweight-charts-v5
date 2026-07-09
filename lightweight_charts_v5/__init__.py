@@ -1,36 +1,29 @@
 # __init__.py
 
 import os
-import socket
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _dist_version
 from typing import List, Dict, Any, Optional, Union
 import streamlit.components.v1 as components
 
 COMPONENT_NAME = "lightweight_charts_v5_component"
-__version__ = "0.1.8"
-_RELEASE = False  # Keep this False for development flexibility
 
-# Function to check if dev server is running
-def _is_dev_server_running():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        # Set a short timeout to avoid hanging
-        s.settimeout(0.5)
-        s.connect(('127.0.0.1', 3001))
-        # An HTTP server only responds after receiving a request
-        s.sendall(b"GET / HTTP/1.0\r\nHost: localhost\r\n\r\n")
-        data = s.recv(1024)
-        return data.startswith(b"HTTP/")
-    except OSError:
-        return False
-    finally:
-        s.close()
+try:
+    __version__ = _dist_version("streamlit-lightweight-charts-v5")
+except PackageNotFoundError:
+    # Source checkout that was never pip-installed
+    __version__ = "0.0.0+dev"
 
-# Use dev server if it's running and we're in dev mode, otherwise use build
-if not _RELEASE and _is_dev_server_running():
-    _component_func = components.declare_component(
-        COMPONENT_NAME,
-        url="http://localhost:3001",
-    )
+# Loading the frontend from the Vite dev server (npm start, port 3001) is an
+# explicit opt-in so that installed releases never touch the network:
+#   LWC_V5_DEV_SERVER=1                  -> http://localhost:3001
+#   LWC_V5_DEV_SERVER=http://host:port   -> custom dev server URL
+_dev_server = os.environ.get("LWC_V5_DEV_SERVER", "")
+if _dev_server.lower() in ("1", "true", "yes"):
+    _dev_server = "http://localhost:3001"
+
+if _dev_server:
+    _component_func = components.declare_component(COMPONENT_NAME, url=_dev_server)
 else:
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     build_dir = os.path.join(parent_dir, "frontend/build")
