@@ -22,7 +22,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm audit --audit-level=high
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: frontend-build
           path: lightweight_charts_v5/frontend/build
@@ -52,7 +52,7 @@ jobs:
           playwright install --with-deps chromium
       - name: Run e2e smoke test
         run: pytest e2e/ -v
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
