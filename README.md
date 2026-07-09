@@ -26,6 +26,8 @@ Key features:
 
 ![Volume Profile](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_4.png)
 
+![Ichimoku Cloud](https://github.com/locupleto/streamlit-lightweight-charts-v5/raw/main/Screenshot_5.png)
+
 ## Installation
 
 ```bash
