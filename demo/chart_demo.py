@@ -40,7 +40,7 @@ def main():
     with col0:
         demo_type = st.selectbox(
             "Select Demo",
-            options=["StockChart Demo", "Volume Profile Demo", "Yield Curve Demo", "Multi-Chart Demo"],
+            options=["StockChart Demo", "Volume Profile Demo", "Ichimoku Demo", "Yield Curve Demo", "Multi-Chart Demo"],
             index=0
         )
 
@@ -60,7 +60,7 @@ def main():
 
     with col2:
         # Add symbol input for yfinance
-        if demo_type in ("StockChart Demo", "Volume Profile Demo"):
+        if demo_type in ("StockChart Demo", "Volume Profile Demo", "Ichimoku Demo"):
             symbol = st.text_input("Symbol", value=DEFAULT_SYMBOL)
 
     with col3:
@@ -266,6 +266,69 @@ def main():
                 )
 
             result = render_volume_profile()
+
+            if take_screenshot:
+                handle_screenshot(result)
+
+        except Exception as e:
+            st.error(f"Error fetching data for {symbol}: {str(e)}")
+            return
+
+    elif demo_type == "Ichimoku Demo":
+        try:
+            ticker = yf.Ticker(symbol)
+            df = ticker.history(period="1000d")
+            df = df.reset_index()
+            df = df.rename(columns={
+                'Date': 'date', 'Open': 'open', 'High': 'high',
+                'Low': 'low', 'Close': 'close', 'Volume': 'volume'
+            })
+            df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+            df = df.replace({np.nan: None})
+            title = f"{symbol} - {ticker.info.get('shortName', 'Ichimoku')}"
+
+            # Ichimoku sidebar controls
+            st.sidebar.header("Ichimoku Settings")
+            tenkan_period = st.sidebar.slider("Tenkan Period", 5, 20, 9)
+            kijun_period = st.sidebar.slider("Kijun Period", 10, 60, 26)
+            senkou_b_period = st.sidebar.slider("Senkou B Period", 20, 120, 52)
+            displacement = st.sidebar.slider("Displacement", 10, 52, 26)
+            show_chikou = st.sidebar.checkbox("Show Chikou Span", value=True)
+
+            ichimoku = IchimokuIndicator(
+                df,
+                tenkan_period=tenkan_period,
+                kijun_period=kijun_period,
+                senkou_b_period=senkou_b_period,
+                displacement=displacement,
+                show_chikou=show_chikou,
+            )
+
+            # Build chart panes
+            price_indicator = PriceIndicator(
+                df, height=500, title=title, style="Candlestick",
+                overlays=[ichimoku], theme=theme,
+            )
+            price_indicator.calculate()
+
+            volume_indicator = VolumeIndicator(df, height=120, theme=theme)
+            volume_indicator.calculate()
+
+            charts_config = [price_indicator.pane(), volume_indicator.pane()]
+            total_height = 620
+
+            @st.fragment
+            def render_ichimoku():
+                return lightweight_charts_v5_component(
+                    name=symbol,
+                    charts=charts_config,
+                    height=total_height,
+                    zoom_level=180,
+                    take_screenshot=take_screenshot,
+                    key=f"chart_{demo_type}"
+                )
+
+            result = render_ichimoku()
 
             if take_screenshot:
                 handle_screenshot(result)
