@@ -62,3 +62,8 @@ include = [
 exclude = [
     "lightweight_charts_v5/frontend/node_modules",
 ]
+# frontend/build is gitignored; hatchling drops VCS-ignored files unless
+# they are declared as build artifacts
+artifacts = [
+    "lightweight_charts_v5/frontend/build",
+]
