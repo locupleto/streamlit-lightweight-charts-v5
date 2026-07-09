@@ -14,6 +14,7 @@ Key features:
 - Use overlay indicators (Moving Averages, AVWAP, Pivot Points...)
 - Support for drawing Rectangles for e.g. Support / Resistance areas from code
 - Volume Profile overlay with pivot-based horizontal volume distribution
+- Ichimoku Cloud overlay with regime-colored kumo fill between the Senkou spans
 - Yield curve charts
 - Supports Screenshots
 

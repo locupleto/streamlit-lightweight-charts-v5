@@ -55,6 +55,10 @@ import {
   StaticRectangle,
   RectangleOptions,
 } from "./plugins/StaticRectanglePlugin"
+import {
+  IchimokuCloud,
+  IchimokuCloudOptions,
+} from "./plugins/IchimokuCloudPlugin"
 
 /**
  * Defines the configuration for a single marker within a series.
@@ -89,6 +93,21 @@ interface SeriesConfig {
   markers?: SeriesMarker[]
   label?: string // Series label (especially useful for overlays)
   rectangles?: RectangleData[] // Add this line for rectangles
+  cloud?: CloudData // Ichimoku-style fill between two lines (kumo)
+}
+
+/**
+ * Fill between two value tracks (a and b) sharing this series' price scale,
+ * e.g. an Ichimoku kumo between Senkou Span A and B. Drawn by the
+ * IchimokuCloud primitive: bull-colored where a >= b, bear-colored below.
+ */
+interface CloudData {
+  points: { time: string; a: number; b: number }[]
+  bullColor?: string
+  bearColor?: string
+  bullLineColor?: string
+  bearLineColor?: string
+  lineWidth?: number
 }
 
 /**
@@ -422,6 +441,35 @@ function LightweightChartsComponent({
               )
               rectangleInstances.push(rectangle)
           })
+        }
+      })
+    })
+
+    /**
+     * Sixth Phase: Attach cloud fills (e.g. Ichimoku kumo) to their carrier
+     * series. The primitive fills between the a/b tracks, regime-colored.
+     */
+    charts.forEach((paneConfig: ChartConfig, paneIndex: number) => {
+      paneConfig.series.forEach((s: SeriesConfig, seriesIndex: number) => {
+        if (
+          s.cloud &&
+          s.cloud.points &&
+          s.cloud.points.length > 1 &&
+          seriesInstances[paneIndex][seriesIndex]
+        ) {
+          const cloudOptions: IchimokuCloudOptions = {
+            points: s.cloud.points as IchimokuCloudOptions["points"],
+            bullColor: s.cloud.bullColor || "rgba(40, 200, 40, 0.15)",
+            bearColor: s.cloud.bearColor || "rgba(255, 40, 40, 0.15)",
+            bullLineColor: s.cloud.bullLineColor || "rgba(40, 200, 40, 0.45)",
+            bearLineColor: s.cloud.bearLineColor || "rgba(255, 40, 40, 0.45)",
+            lineWidth: s.cloud.lineWidth || 1,
+          }
+          new IchimokuCloud(
+            chart,
+            seriesInstances[paneIndex][seriesIndex],
+            cloudOptions
+          )
         }
       })
     })

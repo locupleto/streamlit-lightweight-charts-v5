@@ -334,6 +334,195 @@ class VolumeIndicator(Indicator):
             "title": "Volume"  # Add this line
         }
     
+class IchimokuIndicator(OverlayIndicator):
+    """
+    Classic Ichimoku Kinko Hyo overlay for the main price chart.
+
+    Components (standard 9/26/52/26 parameterization):
+    - Tenkan-sen (conversion): (9-bar highest high + lowest low) / 2
+    - Kijun-sen (base): (26-bar highest high + lowest low) / 2
+    - Senkou Span A: (Tenkan + Kijun) / 2, plotted 26 bars FORWARD
+    - Senkou Span B: (52-bar highest high + lowest low) / 2, plotted
+      26 bars FORWARD
+    - Chikou Span (lagging): close plotted 26 bars BACKWARD
+    - Kumo (cloud): the area between Span A and Span B - green (bullish)
+      where A >= B, red (bearish) where A < B. lightweight-charts has no
+      native two-line fill, so the fill ships as a "cloud" payload on the
+      Span A series config and is drawn by the IchimokuCloud series
+      primitive (frontend/src/plugins/IchimokuCloudPlugin.ts). The Senkou
+      lines themselves are transparent carriers; the visible edge strokes
+      come from the primitive so they can switch color at each crossover.
+
+    Forward displacement: the span series carry their last `displacement`
+    points on FUTURE dates (business days for daily data), extending the
+    time scale beyond the last candle - the classic look where the cloud
+    projects ahead of price.
+    """
+
+    BULL_CLOUD_FILL = 'rgba(40, 200, 40, 0.15)'
+    BEAR_CLOUD_FILL = 'rgba(255, 40, 40, 0.15)'
+    BULL_CLOUD_EDGE = 'rgba(40, 200, 40, 0.45)'
+    BEAR_CLOUD_EDGE = 'rgba(255, 40, 40, 0.45)'
+
+    def __init__(self, df: pd.DataFrame,
+                 tenkan_period: int = 9,
+                 kijun_period: int = 26,
+                 senkou_b_period: int = 52,
+                 displacement: int = 26,
+                 show_chikou: bool = True,
+                 tenkan_color: str = 'rgba(60, 120, 255, 0.9)',   # blue
+                 kijun_color: str = 'rgba(200, 60, 60, 0.9)',     # dark red
+                 chikou_color: str = 'rgba(60, 200, 120, 0.75)',  # green
+                 line_width: int = 2,
+                 span_line_width: int = 1):
+        self.df = df
+        self.tenkan_period = tenkan_period
+        self.kijun_period = kijun_period
+        self.senkou_b_period = senkou_b_period
+        self.displacement = displacement
+        self.show_chikou = show_chikou
+        self.tenkan_color = tenkan_color
+        self.kijun_color = kijun_color
+        self.chikou_color = chikou_color
+        self.line_width = line_width
+        self.span_line_width = span_line_width
+        self.name = f'Ichimoku({tenkan_period},{kijun_period},{senkou_b_period})'
+        self._calculated = False
+
+    def calculate(self) -> None:
+        if self._calculated:
+            return
+
+        high, low = self.df['high'], self.df['low']
+
+        def midline(period: int) -> pd.Series:
+            return (high.rolling(window=period).max() +
+                    low.rolling(window=period).min()) / 2.0
+
+        tenkan = midline(self.tenkan_period)
+        kijun = midline(self.kijun_period)
+        span_a_raw = (tenkan + kijun) / 2.0
+        span_b_raw = midline(self.senkou_b_period)
+
+        self.df['ICHIMOKU_TENKAN'] = tenkan
+        self.df['ICHIMOKU_KIJUN'] = kijun
+        # Displaced (as plotted): row i holds the value computed at
+        # i - displacement - strictly backward-looking, safe for signals.
+        self.df['ICHIMOKU_SPAN_A'] = span_a_raw.shift(self.displacement)
+        self.df['ICHIMOKU_SPAN_B'] = span_b_raw.shift(self.displacement)
+
+        # Keep the raw (undisplaced) spans for series construction - their
+        # tail belongs on future dates beyond the DataFrame.
+        self._span_a_raw = span_a_raw
+        self._span_b_raw = span_b_raw
+
+        self._calculated = True
+
+    def _date_strings(self) -> List[str]:
+        return pd.to_datetime(self.df['date']).dt.strftime('%Y-%m-%d').tolist()
+
+    def _future_date_strings(self, count: int) -> List[str]:
+        """Future date slots beyond the last bar (business days for the
+        daily data the demos use)."""
+        from pandas.tseries.offsets import BDay
+        last_date = pd.to_datetime(self.df['date'].iloc[-1])
+        future = pd.bdate_range(start=last_date + BDay(1), periods=count)
+        return [d.strftime('%Y-%m-%d') for d in future]
+
+    @staticmethod
+    def _records(times: List[str], values: pd.Series) -> List[Dict[str, Any]]:
+        """Zip times with values, dropping NaN - plain floats for JSON."""
+        out = []
+        for t, v in zip(times, values):
+            if pd.notna(v):
+                out.append({'time': t, 'value': float(v)})
+        return out
+
+    def get_series_configs(self) -> List[Dict[str, Any]]:
+        if not self._calculated:
+            self.calculate()
+
+        dates = self._date_strings()
+        span_times = dates + self._future_date_strings(self.displacement)
+
+        def line_options(color: str, width: int) -> Dict[str, Any]:
+            return {
+                'color': color,
+                'lineWidth': width,
+                'priceLineVisible': False,
+                'lastValueVisible': False,
+            }
+
+        # Span values on the displaced axis: the value computed at bar i
+        # plots at span_times[i + displacement].
+        pad = [float('nan')] * self.displacement
+        span_a_plot = pd.Series(pad + self._span_a_raw.tolist())
+        span_b_plot = pd.Series(pad + self._span_b_raw.tolist())
+
+        span_a_data = self._records(span_times, span_a_plot)
+        span_b_data = self._records(span_times, span_b_plot)
+
+        # Kumo fill points - only where BOTH spans exist (paired by time).
+        b_by_time = {r['time']: r['value'] for r in span_b_data}
+        cloud_points = [
+            {'time': r['time'], 'a': r['value'], 'b': b_by_time[r['time']]}
+            for r in span_a_data if r['time'] in b_by_time
+        ]
+
+        series_configs: List[Dict[str, Any]] = [
+            {
+                'type': 'Line',
+                'data': self._records(dates, self.df['ICHIMOKU_TENKAN']),
+                'options': line_options(self.tenkan_color, self.line_width),
+                'label': f'Tenkan({self.tenkan_period})',
+            },
+            {
+                'type': 'Line',
+                'data': self._records(dates, self.df['ICHIMOKU_KIJUN']),
+                'options': line_options(self.kijun_color, self.line_width),
+                'label': f'Kijun({self.kijun_period})',
+            },
+            {
+                # Transparent carrier: extends the time scale to the future
+                # span dates; the visible edge strokes are drawn by the cloud
+                # primitive in the SEGMENT's color (a static Line series
+                # cannot switch color mid-stream).
+                'type': 'Line',
+                'data': span_a_data,
+                'options': line_options('rgba(0, 0, 0, 0)', 1),
+                'label': f'Senkou A(+{self.displacement})',
+                'cloud': {
+                    'points': cloud_points,
+                    'bullColor': self.BULL_CLOUD_FILL,
+                    'bearColor': self.BEAR_CLOUD_FILL,
+                    'bullLineColor': self.BULL_CLOUD_EDGE,
+                    'bearLineColor': self.BEAR_CLOUD_EDGE,
+                    'lineWidth': self.span_line_width,
+                },
+            },
+            {
+                'type': 'Line',
+                'data': span_b_data,
+                'options': line_options('rgba(0, 0, 0, 0)', 1),
+                'label': f'Senkou B(+{self.displacement})',
+            },
+        ]
+
+        if self.show_chikou:
+            # Chikou: close plotted `displacement` bars BACK - the last
+            # `displacement` closes have no past slot and are dropped.
+            chikou_values = self.df['close'].iloc[self.displacement:]
+            chikou_times = dates[:len(dates) - self.displacement]
+            series_configs.append({
+                'type': 'Line',
+                'data': self._records(chikou_times, chikou_values.reset_index(drop=True)),
+                'options': line_options(self.chikou_color, self.span_line_width),
+                'label': f'Chikou(-{self.displacement})',
+            })
+
+        return series_configs
+
+
 class SMAIndicator(OverlayIndicator):
     """
     Simple Moving Average indicator designed to be used as an overlay.

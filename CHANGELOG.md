@@ -23,6 +23,13 @@
   version tags; frontend/build/ is no longer committed to git
 
 ### Added
+- Cloud fill support: a series config can carry a `cloud` payload
+  ({time, a, b} points plus colors) rendered by a new IchimokuCloud
+  canvas primitive that fills between the two tracks, bull/bear colored
+  with exact crossover seams - enables Ichimoku kumo and similar bands
+- Ichimoku Kinko Hyo demo (demo/ichimoku_demo.py) and IchimokuIndicator
+  overlay (demo/indicators.py) with forward-displaced Senkou spans and
+  Chikou span
 - CI workflow running frontend typecheck/build/audit, package build and
   twine check, and a Playwright e2e smoke test on every push and PR
 - Deterministic e2e smoke test (e2e/smoke_app.py) replacing the leftover
