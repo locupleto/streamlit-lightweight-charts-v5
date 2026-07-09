@@ -3,56 +3,67 @@ Notes on development-loop for this project
 
 - Keep two shells available in VSCode
     a) Python Debug Console for the Python Streamlit test project
-    b) zsh for running the development server and re-building ts-code
+    b) zsh for running the Vite dev server and re-building ts-code
 
-Typescript development iteration (zsh)
+TypeScript development iteration (zsh)
 --------------------------------------
 - project_root: /Volumes/Work/development/projects/git/streamlit-lightweight-charts-v5/
 - cd {project_root}/lightweight_charts_v5/frontend
-- use restart.sh to re-build all ts-code and restart the server 
-  (basically: npm run build && sleep 3 && npm start)
+- npm start                # Vite dev server on http://127.0.0.1:3001 (hot reload)
+- npm run typecheck        # tsc --noEmit
+- npm run build            # production build into frontend/build/
 
-Python-side streamlit demo_chart.py
------------------------------------ 
+Python-side streamlit demo (e.g. chart_demo.py)
+-----------------------------------------------
 - cd {project_root}
-- stop streamlit debugger if running
-- pip install -e .
-- Cmd-Shift D to run streamlit again in the debugger
+- pip install -e .                       (once)
+- export LWC_V5_DEV_SERVER=1             # <- REQUIRED to load from the dev server;
+                                         #    without it the component uses frontend/build/
+- streamlit run demo/chart_demo.py       (or via the VSCode debugger, Cmd-Shift-D)
+- LWC_V5_DEV_SERVER also accepts a full URL (e.g. http://127.0.0.1:3001)
 
-New Release
-----------------
-# Remove previous build artifacts
-rm -rf build/ dist/ *.egg-info/
+Testing
+-------
+- pytest e2e/              # Playwright smoke test: renders a deterministic
+                           # multi-pane chart against frontend/build/ and asserts
+                           # the chart canvases appear
+- Requires: pip install -e .[devel] && playwright install chromium
+- CI (.github/workflows/ci.yml) runs on every push/PR:
+  frontend typecheck + build + npm audit gate, then package build,
+  twine check, wheel install, and the e2e smoke test.
 
+New Release (preferred: GitHub Actions + PyPI Trusted Publishing)
+-----------------------------------------------------------------
+1. Bump version in pyproject.toml (single source of truth; __version__ is
+   read from package metadata) and, cosmetically, frontend/package.json
+2. Add a CHANGELOG.md entry (move items from the Unreleased section)
+3. Commit, then tag and push:
+       git tag vX.X.X && git push origin main vX.X.X
+4. .github/workflows/release.yml builds the frontend and package from
+   source, verifies the tag matches pyproject.toml, and publishes to PyPI
+   via Trusted Publishing (OIDC) - no tokens involved.
+
+One-time setup (before the first tag-push release): on PyPI, add a
+"trusted publisher" for the project: repo locupleto/streamlit-lightweight-
+charts-v5, workflow release.yml, environment pypi.
+
+Note: frontend/build/ is gitignored; CI builds it. A pip install straight
+from a git clone therefore needs `npm run build` in the frontend first.
+
+Manual Release (fallback)
+-------------------------
 # Build the frontend
-cd lightweight_charts_v5/frontend
-npm install
-npm run build
-cd ../..
+cd lightweight_charts_v5/frontend && npm ci && npm run build && cd ../..
 
 # Build the Python package
-python -m pip install --upgrade build
-python -m build
-
-Deploy to PyPI (Test First!)
------------------------------
-
-## Step 1: Test Deploy to TestPyPI (ALWAYS DO THIS FIRST)
-# Clean previous builds
-rm -rf build/ dist/ *.egg-info/
-
-# Build the package
+rm -rf dist/
 python -m pip install --upgrade build twine
 python -m build
 
-# Upload to TestPyPI (use TestPyPI token)
+# Optional: test on TestPyPI first
 twine upload --repository testpypi dist/*
-# Token from: https://test.pypi.org/manage/account/token/
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple streamlit-lightweight-charts-v5==X.X.X
 
-# Test installation in another project
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple streamlit-lightweight-charts-v5==0.1.8
-
-## Step 2: Deploy to Production PyPI (after testing!)
-# Only run this after confirming TestPyPI package works!
+# Production PyPI
 twine upload dist/*
-# Token from: Documents/Licenses/PyPI-Token.txt
+# Tokens: ~/.pypirc / Documents/Licenses/PyPI-Token.txt

@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased
+
+### Security
+- Migrated the frontend build from the abandoned Create React App
+  (react-scripts) to Vite; npm audit findings went from 47 (21 high,
+  1 critical, all in the frozen CRA toolchain) to 0
+- Added CI gate failing on high/critical npm audit findings, plus weekly
+  Dependabot updates for npm, pip, and GitHub Actions
+
+### Changed
+- Upgraded React 16.13 to 18.3 (createRoot, automatic JSX runtime) and
+  TypeScript to 5.x; upgraded lightweight-charts to 5.2.0, Vite to 8.x
+- Loading the frontend from the dev server is now an explicit opt-in via
+  the LWC_V5_DEV_SERVER environment variable; installed releases no longer
+  probe localhost:3001 on import
+- Build backend switched from setuptools + MANIFEST.in to hatchling; the
+  version is single-sourced in pyproject.toml and __version__ is read from
+  package metadata; the wheel now ships the LICENSE file
+- requires-python raised to >=3.9 (3.7/3.8 are EOL)
+- Releases publish via GitHub Actions and PyPI Trusted Publishing on
+  version tags; frontend/build/ is no longer committed to git
+
+### Added
+- CI workflow running frontend typecheck/build/audit, package build and
+  twine check, and a Playwright e2e smoke test on every push and PR
+- Deterministic e2e smoke test (e2e/smoke_app.py) replacing the leftover
+  component-template test
+
 ## 0.1.8 (2025-12-27)
 
 ### Security

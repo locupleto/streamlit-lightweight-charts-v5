@@ -11,13 +11,21 @@ The following versions of `streamlit-lightweight-charts-v5` are currently suppor
 | 0.1.6   | :x:                | Deprecated - upgrade to 0.1.8            |
 | < 0.1.6 | :x:                | No longer supported                      |
 
-## Security Status (v0.1.8)
+## Security Status (main, unreleased)
 
-- **npm audit vulnerabilities**: 9 (reduced from 15 in v0.1.7)
-  - 0 critical
-  - 0 high
-  - 9 moderate (dependency chain issues with limited exploit surface)
+- **npm audit vulnerabilities**: 0 (down from 47 findings after the released
+  0.1.8, which had accumulated in the abandoned Create React App toolchain;
+  the frontend build was migrated to Vite)
+- **Automated enforcement**: CI fails on any high/critical npm audit finding
+  on every push and pull request; Dependabot files weekly update PRs for
+  npm, pip, and GitHub Actions dependencies
 - **Direct dependencies**: All up-to-date and actively maintained
+
+## Security Status (v0.1.8, released)
+
+- **npm audit vulnerabilities at release**: 9 (reduced from 15 in v0.1.7);
+  these were build-time toolchain findings with no runtime exploit surface
+  in production deployments
 - **Python dependencies**: yfinance >=1.0 (rate limiting fixes)
 
 ## Reporting a Vulnerability
@@ -81,17 +89,17 @@ When using this component:
 
 ## Known Issues
 
-### Moderate npm Vulnerabilities (9)
-
-The remaining 9 moderate vulnerabilities are transitive dependencies in the React/build toolchain:
-- Limited to development/build-time exposure
-- No runtime exploit surface in production deployments
-- Actively monitoring for patches from upstream maintainers
+None currently. The moderate npm vulnerabilities present in released 0.1.8
+lived in the Create React App build toolchain (development/build-time
+exposure only, no runtime exploit surface) and were eliminated on main by
+migrating the frontend build to Vite. The next release will ship with a
+clean audit.
 
 ## Security Update History
 
 | Version | Date       | Security Changes                                          |
 | ------- | ---------- | --------------------------------------------------------- |
+| main    | 2026-07-09 | CRA→Vite migration: npm vulnerabilities to 0; CI audit gate + Dependabot |
 | 0.1.8   | 2025-12-27 | Reduced npm vulnerabilities from 15 to 9                  |
 | 0.1.7   | 2025-06-20 | Removed js-yaml, timespan, uglify-js critical issues      |
 | 0.1.6   | 2025-04-12 | General stability improvements                            |
@@ -102,5 +110,5 @@ We appreciate the security research community's efforts in responsibly disclosin
 
 ---
 
-**Last Updated**: 2025-12-27
-**Version**: 0.1.8
+**Last Updated**: 2026-07-09
+**Version**: 0.1.8 (released) / main (unreleased, post-modernization)
