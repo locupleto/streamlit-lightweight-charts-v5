@@ -37,7 +37,7 @@ jobs:
         with:
           name: frontend-build
           path: lightweight_charts_v5/frontend/build
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Build package
