@@ -8,7 +8,7 @@ These files can be run directly with `streamlit run`:
 
 | File | Command | Description |
 |------|---------|-------------|
-| `chart_demo.py` | `streamlit run demo/chart_demo.py` | Full-featured demo with multiple chart types, themes, indicators, and screenshot functionality. Includes StockChart, Volume Profile, Yield Curve, and Multi-Chart demos via dropdown selector. |
+| `chart_demo.py` | `streamlit run demo/chart_demo.py` | Full-featured demo with multiple chart types, themes, indicators, and screenshot functionality. Includes StockChart, Volume Profile, Ichimoku, Yield Curve, and Multi-Chart demos via dropdown selector. |
 | `minimal_demo.py` | `streamlit run demo/minimal_demo.py` | Simple example showing basic AAPL stock chart with minimal code. Good starting point for new users. |
 | `volume_profile_demo.py` | `streamlit run demo/volume_profile_demo.py` | Volume profile overlay demo showing pivot-based horizontal volume distribution rendered as rectangles on a candlestick chart. Includes sidebar controls for bins, pivot strength, and value area. |
 | `ichimoku_demo.py` | `streamlit run demo/ichimoku_demo.py` | Ichimoku Kinko Hyo overlay demo: Tenkan, Kijun, Chikou, and the kumo cloud filled between the forward-displaced Senkou spans (green/red by regime, splitting exactly at crossovers). Sidebar controls for all periods and displacement. |
@@ -36,6 +36,7 @@ streamlit run demo/chart_demo.py
 Then use the **"Select Demo"** dropdown in the top-left to choose:
 - **StockChart Demo** - Candlestick/Bar/Line charts with technical indicators
 - **Volume Profile Demo** - Pivot-based horizontal volume distribution overlay with POC and value area
+- **Ichimoku Demo** - Ichimoku Kinko Hyo overlay with regime-colored kumo cloud
 - **Yield Curve Demo** - Interest rate yield curve visualization
 - **Multi-Chart Demo** - Grid of multiple stock area charts
 

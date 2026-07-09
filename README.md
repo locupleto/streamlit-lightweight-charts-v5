@@ -80,8 +80,9 @@ lightweight_charts_v5_component(
 The repository includes a `demo/` directory with two example scripts that showcase how to use the component.
 
 - `minimal_demo.py`: A minimal example using Yahoo Finance stock data
-- `chart_demo.py`: A slightly more advanced example with multiple indicators
+- `chart_demo.py`: A slightly more advanced example with multiple indicators. Includes StockChart, Volume Profile, Ichimoku, Yield Curve, and Multi-Chart demos via a dropdown selector
 - `volume_profile_demo.py`: Volume profile overlay with configurable pivot detection, price bins, and value area
+- `ichimoku_demo.py`: Ichimoku Cloud overlay with the kumo filled between the forward-displaced Senkou spans, colored green/red by regime
 - `chart_themes.py`: Theme customization examples for the chart_demo module.
 - `indicators.py`: Example indicators for the chart_demo module.
 - `yield_curve.py`: Yield curve example chart for the chart_demo module.
@@ -96,6 +97,7 @@ To test the two demo scripts, run them using **Streamlit**:
 streamlit run demo/minimal_demo.py          # Minimal example
 streamlit run demo/chart_demo.py            # Full demo with indicators
 streamlit run demo/volume_profile_demo.py   # Volume profile overlay demo
+streamlit run demo/ichimoku_demo.py         # Ichimoku Cloud overlay demo
 ```
 
 ## License
