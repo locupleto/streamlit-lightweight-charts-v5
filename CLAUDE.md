@@ -63,8 +63,8 @@ This is a Streamlit component that wraps TradingView's Lightweight Charts v5 lib
 
 **Frontend Layer (`lightweight_charts_v5/frontend/`)**:
 - `LightweightChartsComponent.tsx`: Core React component implementing multi-pane chart logic
-- Built with React 16.13.1 and TypeScript
-- Uses `lightweight-charts` v5.0.2 library
+- Built with React 18, TypeScript 5, and Vite 7
+- Uses `lightweight-charts` v5.x library
 - Handles complex pane height initialization and window resize race conditions
 
 **Demo Applications (`demo/`)**:
@@ -74,8 +74,8 @@ This is a Streamlit component that wraps TradingView's Lightweight Charts v5 lib
 ### Development Workflow
 
 The component supports dual-mode development:
-1. **Development**: Auto-detects if React dev server is running on port 3001
-2. **Production**: Uses built static files from `frontend/build/`
+1. **Development**: Set `LWC_V5_DEV_SERVER=1` to load the frontend from the Vite dev server on port 3001 (`npm start`); a full URL also works (`LWC_V5_DEV_SERVER=http://host:port`)
+2. **Production** (default): Uses built static files from `frontend/build/` (gitignored; produced by `npm run build` or CI)
 
 ### Key Technical Challenges Solved
 
@@ -203,12 +203,12 @@ streamlit run demo/chart_demo.py
 ## Version Management
 
 ### **Version Synchronization Requirements**
-This project requires version numbers to be synchronized across multiple files:
+The version is single-sourced in **pyproject.toml** (`project.version`);
+`__version__` is read from installed package metadata at runtime. When bumping:
 
-1. **setup.py** - Python package version (line 10)
-2. **lightweight_charts_v5/__init__.py** - Component `__version__` variable (line 9)
-3. **lightweight_charts_v5/frontend/package.json** - Frontend version (line 3)
-4. **CHANGELOG.md** - Release documentation
+1. **pyproject.toml** - the authoritative package version
+2. **lightweight_charts_v5/frontend/package.json** - cosmetic, keep in sync
+3. **CHANGELOG.md** - Release documentation
 
 ### **Version Update Workflow**
 When releasing a new version:
@@ -236,9 +236,26 @@ When releasing a new version:
 - [ ] No high/critical security vulnerabilities (`npm audit`)
 - [ ] All tests passing (if applicable)
 
-### **Build and Release to PyPI Process**
+### **Release Process (GitHub Actions, preferred)**
 
-This project has a complete automated build and release workflow to PyPI. The user has `.pypirc` configured with both test and production PyPI credentials.
+Releases publish automatically via `.github/workflows/release.yml` using PyPI
+Trusted Publishing (OIDC, no tokens):
+
+```bash
+# 1. Bump version in pyproject.toml and frontend/package.json, update CHANGELOG.md
+# 2. Commit, then tag and push:
+git tag vX.X.X && git push origin main vX.X.X
+# The workflow builds the frontend + package, verifies the tag matches
+# pyproject.toml, and publishes to PyPI.
+```
+
+One-time setup: add a "trusted publisher" on PyPI (project settings →
+Publishing) for repo `locupleto/streamlit-lightweight-charts-v5`, workflow
+`release.yml`, environment `pypi`.
+
+### **Manual Build and Release to PyPI (fallback)**
+
+The user has `.pypirc` configured with both test and production PyPI credentials.
 
 #### **Step 1: Clean and Build**
 ```bash
@@ -329,8 +346,8 @@ The build process validates:
 - **Monitor package age**: Very old packages (like "build" 0.1.4 from 2013) often have security issues
 
 ### **Component Architecture Notes**
-- **Dual-mode development**: Component automatically switches between dev server (port 3001) and production build
-- **React version constraint**: Currently uses React 16.13.1 - updates should be tested carefully
+- **Dual-mode development**: `LWC_V5_DEV_SERVER=1` switches to the Vite dev server (port 3001); default is the production build
+- **React version**: React 18 with createRoot and automatic JSX runtime
 - **Streamlit integration**: Uses streamlit-component-lib v2.0.0 for proper Streamlit integration
 - **TradingView dependency**: Core functionality depends on lightweight-charts v5.0.2
 

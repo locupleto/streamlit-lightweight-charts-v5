@@ -144,3 +144,6 @@ optimization_results
 my_component/frontend/node_modules/.bin/
 node_modules
 test_venv/
+
+# compiled frontend (built by CI / npm run build)
+lightweight_charts_v5/frontend/build/
