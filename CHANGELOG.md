@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-07-09)
 
 ### Security
 - Migrated the frontend build from the abandoned Create React App

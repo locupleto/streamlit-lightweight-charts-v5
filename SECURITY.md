@@ -6,12 +6,11 @@ The following versions of `streamlit-lightweight-charts-v5` are currently suppor
 
 | Version | Supported          | Notes                                    |
 | ------- | ------------------ | ---------------------------------------- |
-| 0.1.8   | :white_check_mark: | Current release - npm vulnerabilities: 9 |
-| 0.1.7   | :white_check_mark: | Previous stable - critical fixes applied |
-| 0.1.6   | :x:                | Deprecated - upgrade to 0.1.8            |
-| < 0.1.6 | :x:                | No longer supported                      |
+| 0.2.0   | :white_check_mark: | Current release - npm vulnerabilities: 0 |
+| 0.1.8   | :white_check_mark: | Previous stable - upgrade recommended    |
+| <= 0.1.7 | :x:               | No longer supported                      |
 
-## Security Status (main, unreleased)
+## Security Status (v0.2.0)
 
 - **npm audit vulnerabilities**: 0 (down from 47 findings after the released
   0.1.8, which had accumulated in the abandoned Create React App toolchain;
@@ -89,17 +88,16 @@ When using this component:
 
 ## Known Issues
 
-None currently. The moderate npm vulnerabilities present in released 0.1.8
-lived in the Create React App build toolchain (development/build-time
-exposure only, no runtime exploit surface) and were eliminated on main by
-migrating the frontend build to Vite. The next release will ship with a
-clean audit.
+None currently. The moderate npm vulnerabilities present in 0.1.8 lived in
+the Create React App build toolchain (development/build-time exposure only,
+no runtime exploit surface) and were eliminated in 0.2.0 by migrating the
+frontend build to Vite.
 
 ## Security Update History
 
 | Version | Date       | Security Changes                                          |
 | ------- | ---------- | --------------------------------------------------------- |
-| main    | 2026-07-09 | CRA→Vite migration: npm vulnerabilities to 0; CI audit gate + Dependabot |
+| 0.2.0   | 2026-07-09 | CRA→Vite migration: npm vulnerabilities to 0; CI audit gate + Dependabot |
 | 0.1.8   | 2025-12-27 | Reduced npm vulnerabilities from 15 to 9                  |
 | 0.1.7   | 2025-06-20 | Removed js-yaml, timespan, uglify-js critical issues      |
 | 0.1.6   | 2025-04-12 | General stability improvements                            |
@@ -111,4 +109,4 @@ We appreciate the security research community's efforts in responsibly disclosin
 ---
 
 **Last Updated**: 2026-07-09
-**Version**: 0.1.8 (released) / main (unreleased, post-modernization)
+**Version**: 0.2.0

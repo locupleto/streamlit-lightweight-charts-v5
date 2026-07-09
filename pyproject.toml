@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "streamlit-lightweight-charts-v5"
-version = "0.1.8"
+version = "0.2.0"
 description = "Streamlit component for viewing v5 Lightweight Charts"
 readme = "README.md"
 authors = [
