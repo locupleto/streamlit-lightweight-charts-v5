@@ -3,7 +3,7 @@
 import os
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _dist_version
-from typing import List, Dict, Any, Optional, Union
+
 import streamlit.components.v1 as components
 
 COMPONENT_NAME = "lightweight_charts_v5_component"
@@ -29,12 +29,12 @@ else:
     build_dir = os.path.join(parent_dir, "frontend/build")
     _component_func = components.declare_component(COMPONENT_NAME, path=build_dir)
 
-def lightweight_charts_v5_component(name, data=None, 
-                                    charts=None, 
-                                    height: int = 400, 
-                                    take_screenshot: bool = False, 
-                                    zoom_level: int = 200, 
-                                    fonts: List[str] = None,
+def lightweight_charts_v5_component(name, data=None,
+                                    charts=None,
+                                    height: int = 400,
+                                    take_screenshot: bool = False,
+                                    zoom_level: int = 200,
+                                    fonts: list[str] = None,
                                     configure_time_scale: bool = False,
                                     key=None):
     """
@@ -70,8 +70,8 @@ def lightweight_charts_v5_component(name, data=None,
     fonts: List[str]
         List of optional google fonts that will be downloaded for use.
     configure_time_scale: bool
-        If True, applies additional time scale configuration that helps with 
-        multi-chart layouts with really small charts but may cause issues with 
+        If True, applies additional time scale configuration that helps with
+        multi-chart layouts with really small charts but may cause issues with
         screenshot functionality. Default is False.
     key: str or None
         Optional key.
@@ -94,7 +94,7 @@ def lightweight_charts_v5_component(name, data=None,
             height=height,
             take_screenshot=take_screenshot,
             zoom_level=zoom_level,
-            fonts=fonts, 
+            fonts=fonts,
             key=key,
             configure_time_scale=configure_time_scale,
             default=default_value

@@ -1,6 +1,8 @@
-import streamlit as st
-from lightweight_charts_v5 import lightweight_charts_v5_component
 from datetime import datetime, timedelta
+
+import streamlit as st
+
+from lightweight_charts_v5 import lightweight_charts_v5_component
 
 # Generate simple test data (no yfinance needed)
 start_date = datetime(2024, 1, 1)

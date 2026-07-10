@@ -1,9 +1,9 @@
 import streamlit as st
 import yfinance as yf
-import pandas as pd
-from lightweight_charts_v5 import lightweight_charts_v5_component
-from indicators import PriceIndicator
 from chart_demo import HANDWRITTEN_FONTS
+from indicators import PriceIndicator
+
+from lightweight_charts_v5 import lightweight_charts_v5_component
 
 LARGE_US_STOCKS = [
     {"symbol": "AAPL", "name": "Apple Inc."},

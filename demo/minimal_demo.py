@@ -1,10 +1,11 @@
 import streamlit as st
-from lightweight_charts_v5 import lightweight_charts_v5_component
 import yfinance as yf
+
+from lightweight_charts_v5 import lightweight_charts_v5_component
 
 # Load stock data
 ticker = "AAPL"
-data = yf.download(ticker, period="100d", interval="1d", auto_adjust=False) 
+data = yf.download(ticker, period="100d", interval="1d", auto_adjust=False)
 
 # Convert data to Lightweight Charts format, ensuring values are proper floats
 chart_data = [

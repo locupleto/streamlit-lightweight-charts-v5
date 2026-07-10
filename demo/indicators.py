@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Literal, Optional
-import pandas as pd
+from typing import Any, Literal, Optional
+
 import numpy as np
+import pandas as pd
 from chart_themes import ChartTheme, ChartThemes
+
 
 # Base stand-alone Indicator class (has its own pane)
 class Indicator(ABC):
@@ -16,10 +18,10 @@ class Indicator(ABC):
         pass
 
     @abstractmethod
-    def pane(self) -> Dict[str, Any]:
+    def pane(self) -> dict[str, Any]:
         pass
 
-    def get_chart_config(self) -> Dict[str, Any]:
+    def get_chart_config(self) -> dict[str, Any]:
         """Get base chart configuration with theme applied"""
         return self.theme.to_dict()
 
@@ -33,14 +35,14 @@ class OverlayIndicator(ABC):
         pass
 
     @abstractmethod
-    def get_series_configs(self) -> List[Dict[str, Any]]:
+    def get_series_configs(self) -> list[dict[str, Any]]:
         """Returns a list of series configurations for overlay plotting"""
         pass
 
 class PriceIndicator(Indicator):
     """
-    An example price chart indicator that can display OHLC price data in 
-    multiple styles. Supports candlestick, bar, and line representations of 
+    An example price chart indicator that can display OHLC price data in
+    multiple styles. Supports candlestick, bar, and line representations of
     price data, along with optional overlay indicators and markers.
 
     Parameters
@@ -108,12 +110,12 @@ class PriceIndicator(Indicator):
     - For Line style, only closing prices are used
     - Markers can be used with any style to highlight specific points
     """
-    def __init__(self, df: pd.DataFrame, height: int = None, 
+    def __init__(self, df: pd.DataFrame, height: int = None,
                  title: Optional[str] = None,
                  style: Literal["Candlestick", "Bar", "Line", "Area"] = "Candlestick",
-                 overlays: Optional[List[Any]] = None, 
-                 markers: Optional[List[Dict[str, Any]]] = None,
-                 rectangles: Optional[List[Dict[str, Any]]] = None,  # Add rectangles parameter
+                 overlays: Optional[list[Any]] = None,
+                 markers: Optional[list[dict[str, Any]]] = None,
+                 rectangles: Optional[list[dict[str, Any]]] = None,  # Add rectangles parameter
                  theme: Optional[ChartTheme] = None):
         super().__init__(df, height, theme)
         self.style = style
@@ -122,12 +124,7 @@ class PriceIndicator(Indicator):
         self.rectangles = rectangles or []  # Initialize rectangles list
         self.title = title or "<Add your own chart title>"
 
-    def calculate(self) -> None:
-        # Calculate any overlay indicators
-        for overlay in self.overlays:
-            overlay.calculate()
-
-    def pane(self) -> Dict[str, Any]:
+    def pane(self) -> dict[str, Any]:
         # Prepare main price series data
         price_data = self.df[['date', 'open', 'high', 'low', 'close']].copy()
         price_data.rename(columns={'date': 'time'}, inplace=True)
@@ -247,14 +244,14 @@ class PriceIndicator(Indicator):
             "series": series_configs,
             "height": self.height,
             "title": display_title
-        } 
+        }
 
     def calculate(self) -> None:
         # Calculate any overlay indicators
         for overlay in self.overlays:
             overlay.calculate()
-            
-    def _get_performance_colors(self, is_dark_theme: bool) -> Dict[str, str]:
+
+    def _get_performance_colors(self, is_dark_theme: bool) -> dict[str, str]:
         """Determine colors based on performance and theme"""
         # Calculate performance
         first_close = self.df['close'].iloc[0]
@@ -293,7 +290,7 @@ class VolumeIndicator(Indicator):
     def calculate(self) -> None:
         pass
 
-    def pane(self) -> Dict[str, Any]:
+    def pane(self) -> dict[str, Any]:
         volume_data = self.df[['date', 'open', 'close', 'volume']].copy()
         volume_data.rename(columns={'date': 'time'}, inplace=True)
         volume_data['time'] = volume_data['time'].astype(str)
@@ -333,7 +330,7 @@ class VolumeIndicator(Indicator):
             "height": self.height,
             "title": "Volume"  # Add this line
         }
-    
+
 class IchimokuIndicator(OverlayIndicator):
     """
     Classic Ichimoku Kinko Hyo overlay for the main price chart.
@@ -418,10 +415,10 @@ class IchimokuIndicator(OverlayIndicator):
 
         self._calculated = True
 
-    def _date_strings(self) -> List[str]:
+    def _date_strings(self) -> list[str]:
         return pd.to_datetime(self.df['date']).dt.strftime('%Y-%m-%d').tolist()
 
-    def _future_date_strings(self, count: int) -> List[str]:
+    def _future_date_strings(self, count: int) -> list[str]:
         """Future date slots beyond the last bar (business days for the
         daily data the demos use)."""
         from pandas.tseries.offsets import BDay
@@ -430,7 +427,7 @@ class IchimokuIndicator(OverlayIndicator):
         return [d.strftime('%Y-%m-%d') for d in future]
 
     @staticmethod
-    def _records(times: List[str], values: pd.Series) -> List[Dict[str, Any]]:
+    def _records(times: list[str], values: pd.Series) -> list[dict[str, Any]]:
         """Zip times with values, dropping NaN - plain floats for JSON."""
         out = []
         for t, v in zip(times, values):
@@ -438,14 +435,14 @@ class IchimokuIndicator(OverlayIndicator):
                 out.append({'time': t, 'value': float(v)})
         return out
 
-    def get_series_configs(self) -> List[Dict[str, Any]]:
+    def get_series_configs(self) -> list[dict[str, Any]]:
         if not self._calculated:
             self.calculate()
 
         dates = self._date_strings()
         span_times = dates + self._future_date_strings(self.displacement)
 
-        def line_options(color: str, width: int) -> Dict[str, Any]:
+        def line_options(color: str, width: int) -> dict[str, Any]:
             return {
                 'color': color,
                 'lineWidth': width,
@@ -469,7 +466,7 @@ class IchimokuIndicator(OverlayIndicator):
             for r in span_a_data if r['time'] in b_by_time
         ]
 
-        series_configs: List[Dict[str, Any]] = [
+        series_configs: list[dict[str, Any]] = [
             {
                 'type': 'Line',
                 'data': self._records(dates, self.df['ICHIMOKU_TENKAN']),
@@ -537,11 +534,11 @@ class SMAIndicator(OverlayIndicator):
     def calculate(self) -> None:
         self.df[f'SMA_{self.period}'] = self.df['close'].rolling(window=self.period).mean()
 
-    def get_series_config(self) -> Dict[str, Any]:
+    def get_series_config(self) -> dict[str, Any]:
         """Returns the series configuration for overlay plotting (backward compatibility)"""
         return self.get_series_configs()[0]
 
-    def get_series_configs(self) -> List[Dict[str, Any]]:
+    def get_series_configs(self) -> list[dict[str, Any]]:
         """Returns a list of series configurations for overlay plotting"""
         sma_data = self.df[['date', f'SMA_{self.period}']].copy()
         sma_data.rename(columns={'date': 'time', f'SMA_{self.period}': 'value'}, inplace=True)
@@ -559,7 +556,7 @@ class SMAIndicator(OverlayIndicator):
             },
             "label": self.name
         }]
-    
+
 class MACDIndicator(Indicator):
     """
     Moving Average Convergence Divergence (MACD) indicator.
@@ -598,7 +595,7 @@ class MACDIndicator(Indicator):
     get_last_update() -> Dict[str, Any]
         Returns data for the last bar for real-time updates
     """
-    def __init__(self, df: pd.DataFrame, height: int = None, 
+    def __init__(self, df: pd.DataFrame, height: int = None,
                  fast_period: int = 12, slow_period: int = 26, signal_period: int = 9,
                  theme: Optional[ChartTheme] = None):
         super().__init__(df, height, theme)
@@ -618,7 +615,7 @@ class MACDIndicator(Indicator):
         # Calculate histogram (MACD - signal)
         self.df['MACD_hist'] = self.df['MACD'] - self.df['MACD_signal']
 
-    def pane(self) -> Dict[str, Any]:
+    def pane(self) -> dict[str, Any]:
         # Prepare MACD histogram data
         macd_data = self.df[['date', 'MACD_hist']].copy()
         macd_data.rename(columns={'date': 'time', 'MACD_hist': 'value'}, inplace=True)
@@ -674,7 +671,7 @@ class MACDIndicator(Indicator):
                     "type": "Line",
                     "data": zero_line_records,
                     "options": {
-                        "color": "rgba(120, 120, 120, 0.8)",  
+                        "color": "rgba(120, 120, 120, 0.8)",
                         "lineWidth": 1,
                         "lineStyle": 1,
                         "priceLineVisible": False,
@@ -687,7 +684,8 @@ class MACDIndicator(Indicator):
         }
 
 class RSIIndicator(Indicator):
-    def __init__(self, df: pd.DataFrame, height: int = None, window: int = 14, theme: Optional[ChartTheme] = None):
+    def __init__(self, df: pd.DataFrame, height: int = None, window: int = 14,
+                 theme: Optional[ChartTheme] = None):
         super().__init__(df, height, theme)
         self.window = window
 
@@ -700,7 +698,7 @@ class RSIIndicator(Indicator):
         rs = avg_gain / avg_loss
         self.df['RSI_14'] = 100 - (100 / (1 + rs))
 
-    def pane(self) -> Dict[str, Any]:
+    def pane(self) -> dict[str, Any]:
         rsi_data = self.df[['date', 'RSI_14']].copy()
         rsi_data.rename(columns={'date': 'time', 'RSI_14': 'value'}, inplace=True)
         rsi_data['time'] = rsi_data['time'].astype(str)
@@ -739,7 +737,7 @@ class RSIIndicator(Indicator):
                 }
             ],
             "height": self.height,
-            "title": "RSI(14)"  
+            "title": "RSI(14)"
         }
 
 class VolumeProfileIndicator(OverlayIndicator):
@@ -844,29 +842,33 @@ class VolumeProfileIndicator(OverlayIndicator):
         parts = [int(x.strip()) for x in rgb_str.split(',')]
         return (parts[0], parts[1], parts[2])
 
-    def _find_pivots_high(self, df: pd.DataFrame) -> List[int]:
+    def _find_pivots_high(self, df: pd.DataFrame) -> list[int]:
         """Find pivot high points."""
         if len(df) < (self.left_strength + self.right_strength + 1):
             return []
         pivots = []
         for i in range(self.left_strength, len(df) - self.right_strength):
             try:
-                if (all(df['high'].iloc[i] > df['high'].iloc[i - j] for j in range(1, self.left_strength + 1)) and
-                        all(df['high'].iloc[i] > df['high'].iloc[i + j] for j in range(1, self.right_strength + 1))):
+                if (all(df['high'].iloc[i] > df['high'].iloc[i - j]
+                        for j in range(1, self.left_strength + 1)) and
+                        all(df['high'].iloc[i] > df['high'].iloc[i + j]
+                            for j in range(1, self.right_strength + 1))):
                     pivots.append(i)
             except (IndexError, KeyError):
                 continue
         return pivots
 
-    def _find_pivots_low(self, df: pd.DataFrame) -> List[int]:
+    def _find_pivots_low(self, df: pd.DataFrame) -> list[int]:
         """Find pivot low points."""
         if len(df) < (self.left_strength + self.right_strength + 1):
             return []
         pivots = []
         for i in range(self.left_strength, len(df) - self.right_strength):
             try:
-                if (all(df['low'].iloc[i] < df['low'].iloc[i - j] for j in range(1, self.left_strength + 1)) and
-                        all(df['low'].iloc[i] < df['low'].iloc[i + j] for j in range(1, self.right_strength + 1))):
+                if (all(df['low'].iloc[i] < df['low'].iloc[i - j]
+                        for j in range(1, self.left_strength + 1)) and
+                        all(df['low'].iloc[i] < df['low'].iloc[i + j]
+                            for j in range(1, self.right_strength + 1))):
                     pivots.append(i)
             except (IndexError, KeyError):
                 continue
@@ -875,9 +877,10 @@ class VolumeProfileIndicator(OverlayIndicator):
     def _interpolate_color(self, ratio: float) -> str:
         """Linear RGB interpolation between low_volume_color and high_volume_color."""
         ratio = max(0.0, min(1.0, ratio))
-        r = int(self._low_volume_rgb[0] + (self._high_volume_rgb[0] - self._low_volume_rgb[0]) * ratio)
-        g = int(self._low_volume_rgb[1] + (self._high_volume_rgb[1] - self._low_volume_rgb[1]) * ratio)
-        b = int(self._low_volume_rgb[2] + (self._high_volume_rgb[2] - self._low_volume_rgb[2]) * ratio)
+        lo_rgb, hi_rgb = self._low_volume_rgb, self._high_volume_rgb
+        r = int(lo_rgb[0] + (hi_rgb[0] - lo_rgb[0]) * ratio)
+        g = int(lo_rgb[1] + (hi_rgb[1] - lo_rgb[1]) * ratio)
+        b = int(lo_rgb[2] + (hi_rgb[2] - lo_rgb[2]) * ratio)
         return f"rgba({r}, {g}, {b}, {self.bar_opacity})"
 
     def _calculate_value_area(self) -> tuple:
@@ -989,7 +992,7 @@ class VolumeProfileIndicator(OverlayIndicator):
         self._va_low_idx, self._va_high_idx = self._calculate_value_area()
         self._calculated = True
 
-    def get_rectangles(self) -> List[Dict[str, Any]]:
+    def get_rectangles(self) -> list[dict[str, Any]]:
         """Generate rectangle data for volume profile bins."""
         if not self._calculated:
             self.calculate()
@@ -1059,7 +1062,7 @@ class VolumeProfileIndicator(OverlayIndicator):
 
         return rectangles
 
-    def get_series_configs(self) -> List[Dict[str, Any]]:
+    def get_series_configs(self) -> list[dict[str, Any]]:
         """Return invisible reference series so the time scale includes profile dates."""
         if not self._calculated or len(self._bin_volumes) == 0:
             return []
@@ -1092,16 +1095,19 @@ class VolumeProfileIndicator(OverlayIndicator):
 
 
 class WilliamsRIndicator(Indicator):
-    def __init__(self, df: pd.DataFrame, height: int = None, period: int = 14, theme: Optional[ChartTheme] = None):
+    def __init__(self, df: pd.DataFrame, height: int = None, period: int = 14,
+                 theme: Optional[ChartTheme] = None):
         super().__init__(df, height, theme)
         self.period = period
 
     def calculate(self) -> None:
         highest_high = self.df['high'].rolling(window=self.period).max()
         lowest_low = self.df['low'].rolling(window=self.period).min()
-        self.df['Williams_R'] = -100 * (highest_high - self.df['close']) / (highest_high - lowest_low)
+        self.df['Williams_R'] = (
+            -100 * (highest_high - self.df['close']) / (highest_high - lowest_low)
+        )
 
-    def pane(self) -> Dict[str, Any]:
+    def pane(self) -> dict[str, Any]:
         williams_data = self.df[['date', 'Williams_R']].copy()
         williams_data.rename(columns={'date': 'time', 'Williams_R': 'value'}, inplace=True)
         williams_data['time'] = williams_data['time'].astype(str)

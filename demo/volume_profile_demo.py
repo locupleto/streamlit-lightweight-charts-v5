@@ -1,9 +1,10 @@
-import streamlit as st
-from lightweight_charts_v5 import lightweight_charts_v5_component
 import numpy as np
+import streamlit as st
 import yfinance as yf
 from chart_themes import ChartThemes
 from indicators import PriceIndicator, VolumeIndicator, VolumeProfileIndicator
+
+from lightweight_charts_v5 import lightweight_charts_v5_component
 
 
 def main():

@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Literal
+from typing import Any, Literal
+
+CrosshairLineStyle = Literal["solid", "dotted", "dashed", "large_dashed", "sparse_dotted"]
+
 
 @dataclass
 class ChartTheme:
@@ -30,7 +33,7 @@ class ChartTheme:
     # Scale borders
     price_scale_border_color: str = "#2B2B43"
     time_scale_border_color: str = "#2B2B43"
-    
+
     # Series colors
     up_color: str = "rgb(54,116,217)"
     down_color: str = "rgb(225,50,85)"
@@ -45,15 +48,15 @@ class ChartTheme:
     # Crosshair settings
     crosshair_vert_color: str = "rgba(0, 0, 255, 0.4)"
     crosshair_horz_color: str = "rgba(0, 0, 255, 0.4)"
-    crosshair_vert_label_background: str = "rgba(0, 0, 255, 1)" 
-    crosshair_horz_label_background: str = "rgba(0, 0, 255, 1)" 
+    crosshair_vert_label_background: str = "rgba(0, 0, 255, 1)"
+    crosshair_horz_label_background: str = "rgba(0, 0, 255, 1)"
     crosshair_mode: Literal["normal", "magnet"] = "normal"
     crosshair_vert_width: int = 2
     crosshair_horz_width: int = 2
-    crosshair_vert_style: Literal["solid", "dotted", "dashed", "large_dashed", "sparse_dotted"] = "dashed"
-    crosshair_horz_style: Literal["solid", "dotted", "dashed", "large_dashed", "sparse_dotted"] = "dashed"  
+    crosshair_vert_style: CrosshairLineStyle = "dashed"
+    crosshair_horz_style: CrosshairLineStyle = "dashed"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert theme to chart configuration dictionary"""
         # Map our style names to LightweightCharts LineStyle values
         line_style_map = {
@@ -67,7 +70,7 @@ class ChartTheme:
             "layout": {
                 "background": {"color": self.background_color},
                 "textColor": self.text_color,
-                "fontFamily": self.font_family, 
+                "fontFamily": self.font_family,
                 "fontSize": self.font_size,
                 "panes": {
                     "separatorColor": self.pane_separator_color,
@@ -176,12 +179,12 @@ class ChartThemes:
             crosshair_vert_color = "rgba(0, 0, 255, 0.4)",
             crosshair_horz_color = "rgba(0, 0, 255, 0.4)",
             crosshair_vert_label_background = "rgba(0, 0, 255, 1)",
-            crosshair_horz_label_background = "rgba(0, 0, 255, 1)", 
+            crosshair_horz_label_background = "rgba(0, 0, 255, 1)",
             crosshair_mode = "normal",
             crosshair_vert_width = 2,
             crosshair_horz_width = 2,
             crosshair_vert_style = "dashed",
-            crosshair_horz_style = "dashed", 
+            crosshair_horz_style = "dashed",
         )
 
     @staticmethod
@@ -204,7 +207,7 @@ class ChartThemes:
             grid_vert_color="#363C4E",
             grid_horz_color="#363C4E",
             grid_lines_visible = True,
-            
+
             # Pane dividers
             pane_separator_color="#363A45",
             pane_separator_hover_color="#787B86",
@@ -234,7 +237,7 @@ class ChartThemes:
             crosshair_vert_width = 2,
             crosshair_horz_width = 2,
             crosshair_vert_style = "dashed",
-            crosshair_horz_style = "dashed", 
+            crosshair_horz_style = "dashed",
         )
 
     @staticmethod
@@ -287,7 +290,7 @@ class ChartThemes:
             crosshair_vert_width = 2,
             crosshair_horz_width = 2,
             crosshair_vert_style = "dashed",
-            crosshair_horz_style = "dashed", 
+            crosshair_horz_style = "dashed",
         )
 
     @staticmethod
@@ -297,7 +300,7 @@ class ChartThemes:
             background_color="#FFFFFF",
             text_color="rgba(0, 5, 175, 1.0)",
 
-            # Global default font settings 
+            # Global default font settings
             font_family = "Patrick Hand SC",
             font_size = 14,
 
@@ -315,7 +318,7 @@ class ChartThemes:
             pane_separator_color="rgba(255,255,255,1.0)",
             pane_separator_hover_color="rgba(255,235,59,0.5)",
             enable_pane_resize = True,
-            
+
             # Scale borders
             price_scale_border_color = "#fb7e6c",
             time_scale_border_color = "#fb7e6c",
@@ -340,5 +343,5 @@ class ChartThemes:
             crosshair_vert_width = 2,
             crosshair_horz_width = 2,
             crosshair_vert_style = "dashed",
-            crosshair_horz_style = "dashed", 
+            crosshair_horz_style = "dashed",
         )

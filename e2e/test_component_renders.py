@@ -1,9 +1,8 @@
 from pathlib import Path
 
 import pytest
-from playwright.sync_api import Page, expect
-
 from e2e_utils import StreamlitRunner
+from playwright.sync_api import Page, expect
 
 SMOKE_APP = Path(__file__).parent.absolute() / "smoke_app.py"
 

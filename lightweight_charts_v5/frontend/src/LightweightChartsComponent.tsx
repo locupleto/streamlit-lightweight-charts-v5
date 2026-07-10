@@ -51,10 +51,7 @@ import {
   IChartApi,
 } from "lightweight-charts"
 
-import {
-  StaticRectangle,
-  RectangleOptions,
-} from "./plugins/StaticRectanglePlugin"
+import { StaticRectangle } from "./plugins/StaticRectanglePlugin"
 import {
   IchimokuCloud,
   IchimokuCloudOptions,
@@ -78,7 +75,10 @@ interface SeriesMarker {
  */
 interface SeriesConfig {
   type: "Candlestick" | "Histogram" | "Line" | "Area" | "Bar"
+  // Series data and options arrive as untyped JSON from the Python side
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[] // The series data points
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: any // Series-specific options including overlay settings
   priceScale?: {
     // Price scale configuration
@@ -173,12 +173,12 @@ interface RectangleData {
 /**
  * Calculate the maximum value in a dataset
  */
-function calculateMaxValue(data: any[]): number {
+function calculateMaxValue(data: { value?: number }[]): number {
   if (!data || data.length === 0) return 0
 
   const values = data
     .map(d => d.value)
-    .filter(v => v != null && !isNaN(v) && isFinite(v))
+    .filter((v): v is number => v != null && !isNaN(v) && isFinite(v))
 
   if (values.length === 0) return 0
   return Math.max(...values)
@@ -203,10 +203,6 @@ function LightweightChartsComponent({
   const isDisposed = useRef(false)
   const [fontsLoaded, setFontsLoaded] = useState(false) // Add state to track font loading
   const isResizing = useRef(false)
-  const lastResizeTime = useRef(Date.now())
-  const MIN_RESIZE_INTERVAL = 500 // 1 second minimum between resizes
-  const [chartStable, setChartStable] = useState(false)
-  const stabilityTimeout = useRef<number | null>(null)
 
   // Separate useEffect for font loading
   useEffect(() => {
@@ -366,8 +362,8 @@ function LightweightChartsComponent({
      * Third Phase: Apply visual height fraction to price scales
      * Uses setVisibleRange() API to control overlay height
      */
-    charts.forEach((paneConfig: ChartConfig, paneIndex: number) => {
-      paneConfig.series.forEach((s: SeriesConfig, seriesIndex: number) => {
+    charts.forEach((paneConfig: ChartConfig) => {
+      paneConfig.series.forEach((s: SeriesConfig) => {
         // Only process series with visualHeightFraction specified
         if (s.priceScale?.visualHeightFraction && s.data && s.options?.priceScaleId) {
           const priceScaleId = s.options.priceScaleId
@@ -587,17 +583,6 @@ function LightweightChartsComponent({
       } else {
         chartRef.current.timeScale().fitContent()
       }
-
-      // Mark chart as initialized
-      setChartStable(true)
-
-      // Set a timeout to mark the chart as stable after initial rendering
-      if (stabilityTimeout.current) {
-        window.clearTimeout(stabilityTimeout.current)
-      }
-      stabilityTimeout.current = window.setTimeout(() => {
-        setChartStable(true)
-      }, 2000) // 2 seconds should be enough for initial rendering
     }
 
     // Handle window resize events
@@ -615,7 +600,6 @@ function LightweightChartsComponent({
           chartRef.current
         ) {
           isResizing.current = true
-          lastResizeTime.current = Date.now()
 
           try {
             // Get new dimensions
@@ -659,7 +643,7 @@ function LightweightChartsComponent({
     // Set up resize listener
     window.addEventListener("resize", handleResize)
 
-    const resizeObserver = new ResizeObserver((entries) => {
+    const resizeObserver = new ResizeObserver(() => {
       // Force handleResize to be called when container size changes
       requestAnimationFrame(() => {
         handleResize()
@@ -671,9 +655,12 @@ function LightweightChartsComponent({
       resizeObserver.observe(chartContainerRef.current)
     }
 
-    // Only set initial value once and not during screenshot
+    // Only set initial value once and not during screenshot. The setState
+    // here is a deliberate once-only latch tied to the Streamlit handshake,
+    // not a synchronizable external state.
     if (!hasSetInitialValue && !take_screenshot) {
       Streamlit.setComponentValue(0)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasSetInitialValue(true)
     }
 
@@ -734,11 +721,6 @@ function LightweightChartsComponent({
       // Clear any pending resize timeout
       if (resizeTimeoutRef.current) {
         window.clearTimeout(resizeTimeoutRef.current)
-      }
-
-      // Clear stability timeout
-      if (stabilityTimeout.current) {
-        window.clearTimeout(stabilityTimeout.current)
       }
 
       // Disconnect the observer

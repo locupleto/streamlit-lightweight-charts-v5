@@ -6,6 +6,7 @@ the top pane, colored volume histogram in the bottom pane.
 import math
 
 import streamlit as st
+
 from lightweight_charts_v5 import lightweight_charts_v5_component
 
 st.set_page_config(layout="wide")
@@ -20,8 +21,8 @@ def make_data(n=120):
         o = price
         c = price + delta
         h = max(o, c) + 0.8
-        l = min(o, c) - 0.8
-        candles.append({"time": day, "open": o, "high": h, "low": l, "close": c})
+        lo = min(o, c) - 0.8
+        candles.append({"time": day, "open": o, "high": h, "low": lo, "close": c})
         ma.append({"time": day, "value": 100.0 + 10.0 * math.sin(i / 15.0)})
         volume.append({
             "time": day,

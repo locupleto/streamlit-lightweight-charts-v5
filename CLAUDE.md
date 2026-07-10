@@ -4,12 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+A `justfile` wraps all common tasks (`brew install just`; run `just` to list
+recipes): `just lint`, `just typecheck`, `just build`, `just test`,
+`just check` (everything CI runs), `just package`, `just dev`, `just demo`.
+The equivalent raw commands:
+
 ### Frontend Development (TypeScript/React)
 ```bash
 cd lightweight_charts_v5/frontend
 npm install                    # Install dependencies
 npm run build                  # Build the React component
 npm start                      # Start development server on port 3001
+npm run lint                   # ESLint (flat config, eslint.config.mjs)
+npm run typecheck              # tsc --noEmit
 ```
 
 ### Python Package Development
@@ -19,14 +26,19 @@ pip install -e .[devel]        # Install with development dependencies
 pip install -e .[demo]         # Install with demo dependencies (yfinance, numpy)
 ```
 
+### Linting
+```bash
+ruff check lightweight_charts_v5 demo e2e   # config in pyproject.toml [tool.ruff]
+ruff check --fix ...                        # auto-fix
+cd lightweight_charts_v5/frontend && npm run lint
+```
+Both linters run in CI and must pass (ESLint warnings are allowed; errors fail).
+
 ### Testing
 ```bash
-# Python tests (pytest available in devel extras)
-pytest
-
-# Frontend tests
-cd lightweight_charts_v5/frontend
-npm test
+# E2e smoke test (pytest + playwright, available in devel extras;
+# requires a built frontend)
+pytest e2e/
 ```
 
 ### Running Demos

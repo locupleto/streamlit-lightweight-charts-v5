@@ -32,6 +32,7 @@ Changelog = "https://github.com/locupleto/streamlit-lightweight-charts-v5/blob/m
 
 [project.optional-dependencies]
 devel = [
+    "ruff >= 0.12",
     "pytest >= 8",
     "playwright >= 1.49",
     "pytest-playwright >= 0.7",
@@ -66,4 +67,19 @@ exclude = [
 # they are declared as build artifacts
 artifacts = [
     "lightweight_charts_v5/frontend/build",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["test_venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # bugbear
+    "UP",  # pyupgrade
 ]

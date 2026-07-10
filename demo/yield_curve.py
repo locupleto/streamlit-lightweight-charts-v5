@@ -1,8 +1,8 @@
-from typing import List, Dict, Any
+from typing import Any
 
-def get_sample_yield_curves() -> List[Dict[str, Any]]:
-    import pandas as pd
-    
+
+def get_sample_yield_curves() -> list[dict[str, Any]]:
+
     """Returns sample yield curve data"""
     curve1 = [
         {"time": 1, "value": 5.378},
@@ -35,7 +35,7 @@ def get_sample_yield_curves() -> List[Dict[str, Any]]:
     ]
     return [curve1, curve2]
 
-def get_yield_curve_config(theme: dict) -> Dict[str, Any]:
+def get_yield_curve_config(theme: dict) -> dict[str, Any]:
     """Creates yield curve chart configuration"""
     curves = get_sample_yield_curves()
 

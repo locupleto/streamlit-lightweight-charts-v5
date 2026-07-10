@@ -1,13 +1,23 @@
-import streamlit as st
-from pathlib import Path
-from lightweight_charts_v5 import lightweight_charts_v5_component
+import os
+import sys
+
 import numpy as np
+import streamlit as st
 import yfinance as yf
 from chart_themes import ChartThemes
-from indicators import *
+from indicators import (
+    IchimokuIndicator,
+    MACDIndicator,
+    PriceIndicator,
+    RSIIndicator,
+    SMAIndicator,
+    VolumeIndicator,
+    VolumeProfileIndicator,
+    WilliamsRIndicator,
+)
 from yield_curve import get_yield_curve_config
-import sys
-import os
+
+from lightweight_charts_v5 import lightweight_charts_v5_component
 
 # Add the current directory to the path so we can import multi_demo
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -40,7 +50,8 @@ def main():
     with col0:
         demo_type = st.selectbox(
             "Select Demo",
-            options=["StockChart Demo", "Volume Profile Demo", "Ichimoku Demo", "Yield Curve Demo", "Multi-Chart Demo"],
+            options=["StockChart Demo", "Volume Profile Demo", "Ichimoku Demo",
+                     "Yield Curve Demo", "Multi-Chart Demo"],
             index=0
         )
 
@@ -52,7 +63,7 @@ def main():
             "Custom": ChartThemes.custom(),
         }
         selected_theme = st.selectbox(
-            "Select Theme", 
+            "Select Theme",
             options=list(theme_options.keys()),
             key="theme_selector"
         )
@@ -121,7 +132,7 @@ def main():
             markers = [
                 {
                     "time": df['date'].iloc[buy_index], # Buy 30 days from the end
-                    "position": "belowBar",  
+                    "position": "belowBar",
                     "color": "#32CD32",
                     "shape": "arrowUp",
                     "text": "Buy",
@@ -129,7 +140,7 @@ def main():
                 },
                 {
                     "time": df['date'].iloc[sell_index], # Sell 15 days from the end
-                    "position": "aboveBar", 
+                    "position": "aboveBar",
                     "color": "#f44336",
                     "shape": "arrowDown",
                     "text": "Sell",
@@ -144,9 +155,10 @@ def main():
                 {
                     # Rectangle highlighting the range between 200 and 150 bars back
                     "startTime": df['date'].iloc[start_offset],
-                    "startPrice": df['low'].iloc[start_offset:end_offset].min(),  # Lowest low in the range
+                    # Lowest low / highest high in the range
+                    "startPrice": df['low'].iloc[start_offset:end_offset].min(),
                     "endTime": df['date'].iloc[end_offset],
-                    "endPrice": df['high'].iloc[start_offset:end_offset].max(),  # Highest high in the range
+                    "endPrice": df['high'].iloc[start_offset:end_offset].max(),
                     "fillColor": "rgba(255, 255, 0, 0.5)",  # Yellow with 50% opacity
                     "borderColor": "rgba(255, 255, 0, 0.0)",  # Same color as fill
                     "borderWidth": 0,  # No border
@@ -157,10 +169,10 @@ def main():
 
             # Then modify the PriceIndicator creation to include the rectangles
             indicators = [
-                PriceIndicator(df, height=500, 
+                PriceIndicator(df, height=500,
                             title=title,
-                            style=chart_style, 
-                            overlays=[sma_20, sma_200], 
+                            style=chart_style,
+                            overlays=[sma_20, sma_200],
                             markers=markers,
                             rectangles=rectangles,  # Add the rectangles here
                             theme=theme),
@@ -374,11 +386,12 @@ def handle_screenshot(result):
     elif isinstance(result, dict):
         if result.get('type') == 'screenshot' and 'data' in result:
             import base64
-            from io import BytesIO
-            from PIL import Image
             import os
-            from pathlib import Path
             from datetime import datetime
+            from io import BytesIO
+            from pathlib import Path
+
+            from PIL import Image
 
             try:
                 # Get the base64 string from the data URL
