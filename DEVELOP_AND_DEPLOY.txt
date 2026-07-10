@@ -5,13 +5,23 @@ Notes on development-loop for this project
     a) Python Debug Console for the Python Streamlit test project
     b) zsh for running the Vite dev server and re-building ts-code
 
+- A justfile at the repo root wraps all common tasks (brew install just;
+  run `just` to list recipes). `just check` = lint + typecheck + build +
+  e2e test, i.e. everything CI runs.
+
 TypeScript development iteration (zsh)
 --------------------------------------
 - project_root: /Volumes/Work/development/projects/git/streamlit-lightweight-charts-v5/
 - cd {project_root}/lightweight_charts_v5/frontend
 - npm start                # Vite dev server on http://127.0.0.1:3001 (hot reload)
+- npm run lint             # ESLint (flat config, eslint.config.mjs)
 - npm run typecheck        # tsc --noEmit
 - npm run build            # production build into frontend/build/
+
+Python linting
+--------------
+- ruff check lightweight_charts_v5 demo e2e    # config in pyproject.toml [tool.ruff]
+- ruff check --fix ...                         # auto-fix
 
 Python-side streamlit demo (e.g. chart_demo.py)
 -----------------------------------------------
@@ -29,8 +39,8 @@ Testing
                            # the chart canvases appear
 - Requires: pip install -e .[devel] && playwright install chromium
 - CI (.github/workflows/ci.yml) runs on every push/PR:
-  frontend typecheck + build + npm audit gate, then package build,
-  twine check, wheel install, and the e2e smoke test.
+  frontend eslint + typecheck + build + npm audit gate, then ruff,
+  package build, twine check, wheel install, and the e2e smoke test.
 
 New Release (preferred: GitHub Actions + PyPI Trusted Publishing)
 -----------------------------------------------------------------
@@ -43,9 +53,9 @@ New Release (preferred: GitHub Actions + PyPI Trusted Publishing)
    source, verifies the tag matches pyproject.toml, and publishes to PyPI
    via Trusted Publishing (OIDC) - no tokens involved.
 
-One-time setup (before the first tag-push release): on PyPI, add a
-"trusted publisher" for the project: repo locupleto/streamlit-lightweight-
-charts-v5, workflow release.yml, environment pypi.
+One-time setup (DONE for 0.2.0): the PyPI "trusted publisher" is
+configured (repo locupleto/streamlit-lightweight-charts-v5, workflow
+release.yml, environment pypi) and was used for the 0.2.0 release.
 
 Note: frontend/build/ is gitignored; CI builds it. A pip install straight
 from a git clone therefore needs `npm run build` in the frontend first.
