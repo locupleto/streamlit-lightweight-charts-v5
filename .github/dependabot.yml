@@ -7,6 +7,19 @@ updates:
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # React majors are a deliberate migration, not a dependency refresh:
+      # react and react-dom must move together (Dependabot proposes them
+      # separately, which cannot work), and streamlit-component-lib's own
+      # react dependency range needs verifying first. Minor/patch still flow.
+      - dependency-name: react
+        update-types: ["version-update:semver-major"]
+      - dependency-name: react-dom
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pip
     directory: /
