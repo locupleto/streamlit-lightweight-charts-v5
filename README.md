@@ -77,28 +77,26 @@ lightweight_charts_v5_component(
 
 ## Demos
 
-The repository includes a `demo/` directory with two example scripts that showcase how to use the component.
+The repository includes a `demo/` directory with example applications. There are two main entry points:
 
-- `minimal_demo.py`: A minimal example using Yahoo Finance stock data
-- `chart_demo.py`: A slightly more advanced example with multiple indicators. Includes StockChart, Volume Profile, Ichimoku, Yield Curve, and Multi-Chart demos via a dropdown selector
-- `volume_profile_demo.py`: Volume profile overlay with configurable pivot detection, price bins, and value area
-- `ichimoku_demo.py`: Ichimoku Cloud overlay with the kumo filled between the forward-displaced Senkou spans, colored green/red by regime
-- `chart_themes.py`: Theme customization examples for the chart_demo module.
-- `indicators.py`: Example indicators for the chart_demo module.
-- `yield_curve.py`: Yield curve example chart for the chart_demo module.
-
-You can find the demo files in the [GitHub repository](https://github.com/locupleto/streamlit-lightweight-charts-v5/tree/main/demo).
-
-## Running the Demo Applications 
-
-To test the two demo scripts, run them using **Streamlit**:
+- `minimal_demo.py`: A minimal single-chart example using Yahoo Finance stock data — the best place to start
+- `chart_demo.py`: The full-featured demo application. A **"Select Demo"** dropdown lets you switch between five demos: StockChart (candlesticks with technical indicators), Volume Profile, Ichimoku Cloud, Yield Curve, and Multi-Chart (a grid of charts)
 
 ```bash
-streamlit run demo/minimal_demo.py          # Minimal example
-streamlit run demo/chart_demo.py            # Full demo with indicators
-streamlit run demo/volume_profile_demo.py   # Volume profile overlay demo
-streamlit run demo/ichimoku_demo.py         # Ichimoku Cloud overlay demo
+streamlit run demo/minimal_demo.py   # Minimal example
+streamlit run demo/chart_demo.py     # Full demo with dropdown selector
 ```
+
+Two of the demos from the dropdown can also be run directly as standalone apps:
+
+```bash
+streamlit run demo/volume_profile_demo.py   # Volume profile overlay with configurable pivot detection, price bins, and value area
+streamlit run demo/ichimoku_demo.py         # Ichimoku Cloud overlay with regime-colored kumo fill
+```
+
+The remaining files (`chart_themes.py`, `indicators.py`, `multi_demo.py`, `yield_curve.py`) are supporting modules imported by `chart_demo.py` and are not meant to be run directly.
+
+See the [demo directory](https://github.com/locupleto/streamlit-lightweight-charts-v5/tree/main/demo) and its README for full details.
 
 ## License
 
