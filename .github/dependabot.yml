@@ -4,6 +4,7 @@ updates:
     directory: /lightweight_charts_v5/frontend
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
@@ -25,8 +26,18 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      # Deliberately groups majors too, unlike npm-minor-patch above. The
+      # workflows pin actions to major tags (actions/checkout@v7), which float
+      # across minor/patch — so a major bump is the ONLY update Dependabot ever
+      # proposes here, and a minor/patch group would never fire. One weekly PR
+      # for the lot; if a member breaks CI, close it and take them singly.
+      github-actions:
+        patterns: ["*"]
