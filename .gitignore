@@ -147,3 +147,8 @@ test_venv/
 
 # compiled frontend (built by CI / npm run build)
 lightweight_charts_v5/frontend/build/
+
+# other agent tooling
+.agents/
+.codex/
+AGENTS.md
